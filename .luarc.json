@@ -1,0 +1,8 @@
+{
+  "runtime.version": "Lua 5.1",
+  "runtime.pathStrict": false,
+  "workspace.checkThirdParty": false,
+  "diagnostics.globals": ["SiftLootAdvisor", "SiftLootAdvisorDB", "SiftLootAdvisorCharDB", "SiftTest", "describe", "it", "expect"],
+  "diagnostics.disable": ["lowercase-global"],
+  "hint.enable": false
+}

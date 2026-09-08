@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">Sift - the keeper</title>
+  <desc id="desc">A jade gemstone held above a gold sieve; the small grains fall away.</desc>
+  <defs>
+    <linearGradient id="ground" x2="0.7" y2="1">
+      <stop stop-color="#24343a"/><stop offset="1" stop-color="#0b131b"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0.2" x2="0.8" y2="1">
+      <stop stop-color="#fff0bf"/><stop offset="0.5" stop-color="#e8b458"/><stop offset="1" stop-color="#b77b35"/>
+    </linearGradient>
+    <linearGradient id="jade" x2="0.7" y2="1">
+      <stop stop-color="#c0ffe2"/><stop offset="1" stop-color="#43b68f"/>
+    </linearGradient>
+  </defs>
+  <g id="background">
+    <circle cx="128" cy="128" r="124" fill="url(#ground)"/>
+    <circle cx="128" cy="128" r="121" fill="none" stroke="#66716a" stroke-opacity="0.5" stroke-width="2"/>
+  </g>
+  <g id="mark">
+    <path d="M97 43H159L184 77L128 137L72 77Z" fill="#000" opacity="0.25" transform="translate(0 5)"/>
+    <path d="M97 43H159L184 77L128 137L72 77Z" fill="url(#jade)"/>
+    <path d="M97 43L106 77H72Z" fill="#a9f8d5"/>
+    <path d="M97 43H159L150 77H106Z" fill="#ddffec"/>
+    <path d="M159 43L184 77H150Z" fill="#69d8b1"/>
+    <path d="M72 77H106L128 137Z" fill="#32977b"/>
+    <path d="M150 77H184L128 137Z" fill="#247762"/>
+    <path d="M44 111H69L98 146H158L187 111H212L170 168H86Z" fill="url(#gold)"/>
+    <path d="M44 111H69L98 146H158L187 111H212L207 118H190L161 153H95L66 118H49Z" fill="#fff0bf" opacity="0.65"/>
+    <path d="M95 181H109V195H95ZM147 181H161V195H147ZM121 204H135V218H121Z" fill="#ce9b4d"/>
+  </g>
+</svg>

@@ -1,0 +1,61 @@
+## Interface: 120100
+## Title: Sift
+## Notes: Tells you what to do with the gear you just looted: equip it, hold it, send it to an alt, or get rid of it.
+## Author: Chase Ingersol
+## Version: @project-version@
+## SavedVariables: SiftLootAdvisorDB
+## SavedVariablesPerCharacter: SiftLootAdvisorCharDB
+## IconTexture: Interface\AddOns\SiftLootAdvisor\Media\minimap-icon.tga
+## Category-enUS: Inventory
+## AddonCompartmentFunc: SiftLootAdvisor_OnCompartmentClick
+## X-License: MIT
+## X-Website: https://github.com/chaseingersol/Sift
+
+Core\Season.lua
+Core\Stats.lua
+Core\Data.lua
+Core\Specs.lua
+Core\PawnString.lua
+Core\Weights.lua
+Core\WeightsData.lua
+Core\Scorer.lua
+Core\Growth.lua
+Core\Eligibility.lua
+Core\Slots.lua
+Core\Tracks.lua
+Core\Engine.lua
+Core\Vault.lua
+Core\Roll.lua
+
+Adapters\Guard.lua
+Adapters\DB.lua
+Adapters\ItemFacts.lua
+Adapters\SpecScan.lua
+Adapters\Calibrate.lua
+Adapters\Character.lua
+Adapters\Resources.lua
+Adapters\Verdicts.lua
+Adapters\Bank.lua
+Adapters\Triggers.lua
+Adapters\Probe.lua
+Adapters\Status.lua
+Adapters\Vault.lua
+Adapters\LootRoll.lua
+
+UI\Style.lua
+UI\EditMode.lua
+UI\EditModePanel.lua
+UI\Tooltip.lua
+UI\AltCompare.lua
+UI\Toast.lua
+UI\Panel.lua
+UI\Vault.lua
+UI\LootRoll.lua
+UI\Weights.lua
+UI\Copy.lua
+UI\Guide.lua
+UI\Feedback.lua
+UI\Minimap.lua
+UI\Options.lua
+
+Sift.lua

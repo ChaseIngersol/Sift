@@ -1,0 +1,77 @@
+local ns = SiftTest.ns
+local F = require("fixtures")
+local Slots = ns.Slots
+local S = Slots.ID
+
+local function byIlvl(eq) return eq.ilvl end
+
+describe("Slots.Candidates", function()
+  it("maps single-slot armor", function()
+    local c, combined = Slots.Candidates(F.item({ equipLoc = "INVTYPE_HEAD" }), ns.Data.specs[72])
+    expect(c).toEqual({ S.HEAD })
+    expect(combined).toBe(false)
+  end)
+
+  it("maps rings and trinkets to both slots", function()
+    expect(Slots.Candidates(F.ring(), ns.Data.specs[72])).toEqual({ S.FINGER1, S.FINGER2 })
+    expect(Slots.Candidates(F.trinket(), ns.Data.specs[72])).toEqual({ S.TRINKET1, S.TRINKET2 })
+  end)
+
+  it("lets a one-hander compete with either hand only for dual wielders", function()
+    expect(Slots.Candidates(F.weapon(), ns.Data.specs[72])).toEqual({ S.MAINHAND, S.OFFHAND })
+    expect(Slots.Candidates(F.weapon(), ns.Data.specs[73])).toEqual({ S.MAINHAND })
+  end)
+
+  it("marks two-handers and ranged as combined", function()
+    local c, combined = Slots.Candidates(F.weapon({ equipLoc = "INVTYPE_2HWEAPON" }), ns.Data.specs[71])
+    expect(c).toEqual({ S.MAINHAND })
+    expect(combined).toBe(true)
+  end)
+end)
+
+describe("Slots.Incumbent", function()
+  it("picks the weaker of two rings", function()
+    local char = F.char()
+    char.slots[S.FINGER1] = F.ring({ name = "Good", ilvl = 310 })
+    char.slots[S.FINGER2] = F.ring({ name = "Bad", ilvl = 290 })
+    local inc = Slots.Incumbent(F.ring(), char, ns.Data.specs[72], byIlvl)
+    expect(inc.item.name).toBe("Bad")
+    expect(inc.slot).toBe(S.FINGER2)
+  end)
+
+  it("reports an empty slot", function()
+    local char = F.char()
+    char.slots[S.FINGER1] = F.ring({ ilvl = 310 })
+    local inc = Slots.Incumbent(F.ring(), char, ns.Data.specs[72], byIlvl)
+    expect(inc.empty).toBe(true)
+    expect(inc.slot).toBe(S.FINGER2)
+  end)
+
+  it("combines main and off hand for a two-hander", function()
+    local char = F.char()
+    char.slots[S.MAINHAND] = F.weapon({ ilvl = 300 })
+    char.slots[S.OFFHAND] = F.weapon({ ilvl = 280 })
+    local inc = Slots.Incumbent(F.weapon({ equipLoc = "INVTYPE_2HWEAPON" }), char, ns.Data.specs[72], byIlvl)
+    expect(inc.combined).toBe(true)
+    expect(inc.value).toBe(580)
+    expect(inc.secondItem.ilvl).toBe(280)
+  end)
+
+  it("carries the tier flag of the incumbent", function()
+    local char = F.char()
+    char.slots[S.HEAD] = F.item({ equipLoc = "INVTYPE_HEAD", isTier = true })
+    local inc = Slots.Incumbent(F.item({ equipLoc = "INVTYPE_HEAD" }), char, ns.Data.specs[72], byIlvl)
+    expect(inc.isTier).toBe(true)
+  end)
+end)
+
+describe("Slots.IsEquippable", function()
+  it("accepts gear and rejects shirts, tabards and empty", function()
+    expect(Slots.IsEquippable("INVTYPE_CHEST")).toBe(true)
+    expect(Slots.IsEquippable("INVTYPE_BODY")).toBe(false)
+    expect(Slots.IsEquippable("INVTYPE_TABARD")).toBe(false)
+    expect(Slots.IsEquippable("")).toBe(false)
+    expect(Slots.IsEquippable(nil)).toBe(false)
+    expect(Slots.IsEquippable("INVTYPE_BAG")).toBe(false)
+  end)
+end)

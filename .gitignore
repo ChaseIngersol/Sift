@@ -1,0 +1,7 @@
+# WoW SavedVariables never live in the repo
+*.lua.bak
+WTF/
+# packager output
+.release/
+# symlink to the internal repo (notes); never part of this repo
+private

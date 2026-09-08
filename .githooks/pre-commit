@@ -1,0 +1,17 @@
+#!/bin/sh
+# Sift pre-commit: ASCII only in source, and the engine tests must pass.
+set -e
+root="$(git rev-parse --show-toplevel)"
+cd "$root"
+
+bad=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(lua|toc|md|json|yml)$' | xargs -r grep -lP '[^\x00-\x7F]' || true)
+if [ -n "$bad" ]; then
+  echo "pre-commit: non-ASCII bytes in:"
+  echo "$bad"
+  exit 1
+fi
+
+if git diff --cached --name-only | grep -qE '\.(lua|toc)$'; then
+  lua5.1 tests/run.lua
+  lua5.1 tests/smoke.lua
+fi

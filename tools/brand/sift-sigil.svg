@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">Sift - the sigil</title>
+  <desc id="desc">A gold, chiseled S with a jade facet on a dark medallion.</desc>
+  <defs>
+    <linearGradient id="ground" x2="0.7" y2="1">
+      <stop stop-color="#24343a"/><stop offset="1" stop-color="#0b131b"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0.2" x2="0.8" y2="1">
+      <stop stop-color="#fff0bf"/><stop offset="0.45" stop-color="#e8b458"/><stop offset="1" stop-color="#b77b35"/>
+    </linearGradient>
+    <linearGradient id="jade" x2="0.7" y2="1">
+      <stop stop-color="#c0ffe2"/><stop offset="1" stop-color="#43b68f"/>
+    </linearGradient>
+  </defs>
+  <g id="background">
+    <circle cx="128" cy="128" r="124" fill="url(#ground)"/>
+    <circle cx="128" cy="128" r="121" fill="none" stroke="#66716a" stroke-opacity="0.5" stroke-width="2"/>
+  </g>
+  <g id="mark">
+    <path d="M163 48H89L53 84V118L165 156V164L149 180H69V211H162L201 172V132L89 94V91L102 78H163Z" fill="#000" opacity="0.28" transform="translate(0 5)"/>
+    <path d="M163 48H89L53 84V118L165 156V164L149 180H69V211H162L201 172V132L89 94V91L102 78H163Z" fill="url(#gold)"/>
+    <path d="M53 84L89 48H163V54H92L60 87V113L53 118Z" fill="#fff4ce" opacity="0.65"/>
+    <path d="M53 103L183 147L165 156L53 118Z" fill="#8b572d" opacity="0.38"/>
+    <path d="M69 180H149L165 164V174L153 186H69Z" fill="#fff0bf" opacity="0.6"/>
+    <path d="M190 38L215 63L190 88L165 63Z" fill="url(#jade)"/>
+    <path d="M190 38V63H165Z" fill="#e0ffef"/>
+    <path d="M190 63H215L190 88Z" fill="#279b79"/>
+  </g>
+</svg>

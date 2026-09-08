@@ -1,0 +1,12 @@
+package-as: SiftLootAdvisor
+manual-changelog: CHANGELOG.md
+enable-nolib-creation: no
+ignore:
+  - tests
+  - tools
+  - docs
+  - .githooks
+  - .luarc.json
+  - .editorconfig
+  - Media/icon.tga
+  - private
