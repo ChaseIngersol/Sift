@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.3 - 2026-09-07
+
+- The wait for worn gear the client has not loaded yet now rides each
+  item's own load callback, so a cold start can no longer miss the moment
+  the data arrives.
+- `/sift status` says when worn pieces are still waiting on item data and
+  how often the picture was re-read; `/sift probe cold` exercises it.
+
 ## 1.0.2 - 2026-09-07
 
 - Worn gear the client had not loaded yet at login left holes in Sift's
