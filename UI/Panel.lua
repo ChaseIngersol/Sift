@@ -15,6 +15,13 @@ local REASON_TOP, ROW_PAD = 26, 8
 local VENDOR_AUTO_OPEN = 3
 
 local frame, scroll, content, thumb, footer, empty
+local listH = 10 -- height of the laid-out list, set by layout()
+
+-- The visible height of the list, from the frame's own height so it is
+-- right in the same frame a resize or relayout changed it.
+local function viewHeight()
+  return math.max(1, (frame:GetHeight() or 0) - (TOP_H + 8) - FOOT_H)
+end
 local rows, headers = {}, {}
 local rowsUsed, headersUsed = 0, 0
 
@@ -161,7 +168,7 @@ local function build()
   scroll:SetPoint("BOTTOMRIGHT", -PAD, FOOT_H)
   scroll:EnableMouseWheel(true)
   scroll:SetScript("OnMouseWheel", function(s, delta)
-    local maxScroll = math.max(0, content:GetHeight() - s:GetHeight())
+    local maxScroll = math.max(0, listH - viewHeight())
     local next = math.max(0, math.min(maxScroll, s:GetVerticalScroll() - delta * ROW_H))
     s:SetVerticalScroll(next)
     updateThumb()
@@ -502,7 +509,12 @@ function Panel.Groups()
   return collect()
 end
 
+function Panel.ScrollFrame()
+  return scroll
+end
+
 local function layout(groups)
+  local keep = scroll:GetVerticalScroll() or 0
   for i = 1, rowsUsed do rows[i]:Hide() end
   for i = 1, headersUsed do headers[i]:Hide() end
   rowsUsed, headersUsed = 0, 0
@@ -584,7 +596,8 @@ local function layout(groups)
     empty:Hide()
   end
 
-  content:SetHeight(math.max(y, 10))
+  listH = math.max(y, 10)
+  content:SetHeight(listH)
   local size = ns.db.prefs.panelSize
   if size and size.h then
     frame:SetHeight(size.h)
@@ -592,7 +605,10 @@ local function layout(groups)
     local total = TOP_H + 8 + y + FOOT_H + 4
     frame:SetHeight(math.min(maxHeight(), math.max(180, total)))
   end
-  scroll:SetVerticalScroll(0)
+  -- A refresh keeps the reader's place. The offset is clamped to the new
+  -- list, so a shorter list never leaves the view past its end. Opening
+  -- the panel fresh starts at the top (see Toggle).
+  scroll:SetVerticalScroll(math.max(0, math.min(keep, listH - viewHeight())))
   updateThumb()
 end
 
@@ -642,6 +658,7 @@ function Panel.Toggle()
   if frame:IsShown() then frame:Hide() return end
   ns.Verdicts.ScanAll()
   ns.Triggers.SyncWakeEvents()
+  scroll:SetVerticalScroll(0)
   frame:Show()
   Panel.Refresh()
 end

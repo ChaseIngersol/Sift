@@ -19,7 +19,8 @@ Widget.__index = function(t, k)
   if k == "GetHeight" or k == "GetWidth" or k == "GetStringWidth" then return function() return 100 end end
   if k == "GetLeft" or k == "GetRight" or k == "GetTop" or k == "GetBottom" then return function() return 100 end end
   if k == "GetStringHeight" then return function() return 40 end end
-  if k == "GetVerticalScroll" then return function() return 0 end end
+  if k == "GetVerticalScroll" then return function(self) return self.__scroll or 0 end end
+  if k == "SetVerticalScroll" then return function(self, v) self.__scroll = v end end
   if k == "GetAlpha" then return function() return 1 end end
   if k == "IsShown" or k == "IsVisible" then return function(self) return self.__shown end end
   if k == "Show" then return function(self) self.__shown = true end end
@@ -1149,6 +1150,24 @@ do
 end
 vh = vendorHeader()
 check(vh and vh.open and (vh.count.__text or ""):find("Hide", 1, true), "an open vendor group offers Hide")
+
+-- The reader's place survives a refresh: wheel down, refresh, still there.
+-- A refresh that shrinks the list clamps the offset. Opening fresh starts
+-- at the top.
+do
+  local sf = ns.Panel.ScrollFrame()
+  sf.__scripts.OnMouseWheel(sf, -1)
+  check(sf:GetVerticalScroll() == 54, "wheel down moves the panel one row (" .. tostring(sf:GetVerticalScroll()) .. ")")
+  ns.Panel.Refresh()
+  check(sf:GetVerticalScroll() == 54, "a refresh keeps the scroll position (" .. tostring(sf:GetVerticalScroll()) .. ")")
+  sf:SetVerticalScroll(100000)
+  ns.Panel.Refresh()
+  local off = sf:GetVerticalScroll()
+  check(off > 0 and off < 100000, "a refresh clamps the offset to the new list (" .. tostring(off) .. ")")
+  ns.Panel.Toggle()
+  ns.Panel.Toggle()
+  check(ns.Panel.IsShown() and sf:GetVerticalScroll() == 0, "opening the panel fresh starts at the top")
+end
 ns.db.prefs.vendorOpen = nil
 for slot = 10, 12 do bags[0][slot] = nil end
 fire("BAG_UPDATE_DELAYED")

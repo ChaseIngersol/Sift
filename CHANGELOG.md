@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.4 - unreleased
+
+- The panel keeps your place when it refreshes after you equip, vendor
+  or bank something. It starts at the top only when you open it.
+
 ## 1.0.3 - 2026-09-07
 
 - The wait for worn gear the client has not loaded yet now rides each
