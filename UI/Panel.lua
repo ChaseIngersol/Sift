@@ -6,7 +6,7 @@ local Panel = {}
 ns.Panel = Panel
 
 local Style, Guard = ns.Style, ns.Guard
-local WIDTH, PAD = 660, 14
+local WIDTH, PAD = 520, 14
 local MIN_W, MIN_H, MAX_W, MAX_H_HARD = 480, 220, 1100, 1400
 local ROW_H, HEADER_H, GAP = 54, 30, 6
 local TOP_H, FOOT_H = 44, 34

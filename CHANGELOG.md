@@ -4,6 +4,8 @@
 
 - The panel keeps your place when it refreshes after you equip, vendor
   or bank something. It starts at the top only when you open it.
+- The panel's default width is narrower, to fit the shorter row text.
+  Double-click the corner grip to return to it.
 
 ## 1.0.3 - 2026-09-07
 
