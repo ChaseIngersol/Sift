@@ -6,6 +6,13 @@ Advice only. It never equips, sells, or moves anything.
 
 Target client: Midnight 12.1 and later. No addon dependencies.
 
+<p align="center">
+  <img width="729" height="369" align="center" alt="guide" src="https://github.com/user-attachments/assets/dffb3897-be0c-419d-83ba-d528fc3cb0bf" />
+</p>
+<p align="center">
+  <img width="692" height="801" align="center" alt="main-panel" src="https://github.com/user-attachments/assets/f4447253-307e-4eff-80e8-aa6b873f2114" />
+</p>
+
 ## What it does
 
 - Reads every equippable rare-or-better item as it lands in your bags.
