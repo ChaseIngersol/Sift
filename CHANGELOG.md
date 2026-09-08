@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.1 - 2026-09-07
+
+- Listed on CurseForge. The project id in the TOC lets the CurseForge app
+  match installed copies to the project.
+
 ## 1.0.0 - 2026-09-07
 
 First release, for Midnight 12.1 (Season 2).

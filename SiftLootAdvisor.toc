@@ -10,6 +10,7 @@
 ## AddonCompartmentFunc: SiftLootAdvisor_OnCompartmentClick
 ## X-License: MIT
 ## X-Website: https://github.com/chaseingersol/Sift
+## X-Curse-Project-ID: 1686767
 
 Core\Season.lua
 Core\Stats.lua
