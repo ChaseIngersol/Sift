@@ -863,6 +863,7 @@ do -- Worn gear the client has not cached yet: a hole now, whole once the data l
   ns.Character.Invalidate()
   local me = ns.Character.Self()
   check(me.slots[slot] == nil and me.incomplete == 1, "an uncached worn piece leaves a hole and marks the snapshot incomplete")
+  check(table.concat(ns.Status.Lines(), "\n"):find("(1 waiting on item data)", 1, true) ~= nil, "status says a slot is waiting on item data")
   ns.Character.Snapshot()
   check(ns.db.chars[key].slots[slot] ~= nil, "an incomplete snapshot leaves the saved one alone")
   ns.Triggers.CheckWorn()
@@ -871,6 +872,8 @@ do -- Worn gear the client has not cached yet: a hole now, whole once the data l
   me = ns.Character.Self()
   check(me.slots[slot] ~= nil and me.incomplete == nil, "the picture is rebuilt whole when the item data arrives")
   check(ns.db.chars[key].slots[slot] ~= nil, "and the saved snapshot is whole too")
+  check(ns.Triggers.WornRebuilds() == 1 and table.concat(ns.Status.Lines(), "\n"):find("re-read 1 time after item data arrived", 1, true) ~= nil,
+    "status counts the re-read, so a cold start can be told from a warm one")
 end
 -- A send has a life: suggested until Tester says "Will send" or the item
 -- turns up in a warband tab, then banked until Altie picks it up. The

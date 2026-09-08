@@ -189,6 +189,7 @@ end
 -- and every verdict against a hole says the slot is empty. Keep asking
 -- while it is incomplete; once whole, rebuild the picture and re-run
 -- everything that was judged against the holes.
+local wornRebuilds = 0
 local function checkWorn()
   if not ns.Character.Self().incomplete then return end
   ns.Character.Invalidate()
@@ -196,6 +197,8 @@ local function checkWorn()
     frame:RegisterEvent("GET_ITEM_INFO_RECEIVED")
     return
   end
+  wornRebuilds = wornRebuilds + 1
+  ns.Log("info", "worn gear read whole after item data arrived; verdicts re-run")
   ns.Verdicts.InvalidateAll()
   ns.Character.Snapshot()
   ns.Verdicts.ScanAll()
@@ -203,6 +206,9 @@ local function checkWorn()
   Triggers.SyncWakeEvents()
 end
 function Triggers.CheckWorn() checkWorn() end
+-- How many times this session the worn picture had to be read again;
+-- /sift status shows it, so a cold start can be told from a warm one.
+function Triggers.WornRebuilds() return wornRebuilds end
 
 local function retryUncached()
   local list = {}

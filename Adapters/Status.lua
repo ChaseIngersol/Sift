@@ -12,7 +12,10 @@ function Status.Lines()
   local spec = me.specs and me.specs[1]
   local slotsRead = 0
   for _ in pairs(me.slots) do slotsRead = slotsRead + 1 end
-  say(string.format("%s, %s, %d equipped slots read, %d tier pieces", me.name or "?", spec and spec.name or "?", slotsRead, me.tierCount or 0))
+  local rebuilds = ns.Triggers and ns.Triggers.WornRebuilds and ns.Triggers.WornRebuilds() or 0
+  say(string.format("%s, %s, %d equipped slots read%s, %d tier pieces%s", me.name or "?", spec and spec.name or "?", slotsRead,
+    me.incomplete and string.format(" (%d waiting on item data)", me.incomplete) or "", me.tierCount or 0,
+    rebuilds > 0 and string.format(", re-read %d time%s after item data arrived", rebuilds, rebuilds == 1 and "" or "s") or ""))
   local alts = ns.Character.Alts()
   local holds = 0
   for _ in pairs(ns.db.holds) do holds = holds + 1 end
