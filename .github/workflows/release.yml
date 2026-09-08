@@ -22,6 +22,10 @@ jobs:
           lua5.1 tests/smoke.lua
       - name: Package and upload
         uses: BigWigsMods/packager@v2
+        with:
+          # The upload label on the addon sites: the addon's name and the
+          # tag, "Sift-v1.0.1". The zip itself keeps the folder name.
+          args: -n ":Sift-{project-version}{classic}"
         env:
           GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
           CF_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
