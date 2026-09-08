@@ -139,6 +139,10 @@ after a reload or logout.
 warband tabs (ids, slots, the first items with their GUIDs) and whether
 each send on record is found in them.
 
+`/sift probe cold`: treat three worn pieces as not loaded yet, the way a
+cold client start can, and let their load callbacks rebuild the picture.
+`/sift status` then counts the re-read.
+
 ### /sift refresh
 
 Re-run every hold and cached verdict as if gear or spec had just changed.

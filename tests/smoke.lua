@@ -244,6 +244,25 @@ C_Item = {
   IsItemConvertibleAndValidForPlayer = function(loc) return loc.catalyst or false end,
   GetItemQualityColor = function() return 1, 1, 1, "ffffffff" end,
 }
+-- ItemMixin for worn slots: the callback runs at once when the item's data
+-- is there, otherwise it waits for loadItems().
+local itemLoadWaiters = {}
+Item = {
+  CreateFromEquipmentSlot = function(_, slot)
+    local e = equipped[slot]
+    return {
+      IsItemEmpty = function() return e == nil end,
+      ContinueOnItemLoad = function(_, fn)
+        if e and C_Item.GetItemInfo(link(e.id)) then fn() else itemLoadWaiters[#itemLoadWaiters + 1] = fn end
+      end,
+    }
+  end,
+}
+local function loadItems()
+  local w = itemLoadWaiters
+  itemLoadWaiters = {}
+  for _, fn in ipairs(w) do fn() end
+end
 ItemLocation = {
   CreateFromBagAndSlot = function(_, bag, slot)
     local c = bags[bag] and bags[bag][slot]
@@ -866,14 +885,23 @@ do -- Worn gear the client has not cached yet: a hole now, whole once the data l
   check(table.concat(ns.Status.Lines(), "\n"):find("(1 waiting on item data)", 1, true) ~= nil, "status says a slot is waiting on item data")
   ns.Character.Snapshot()
   check(ns.db.chars[key].slots[slot] ~= nil, "an incomplete snapshot leaves the saved one alone")
-  ns.Triggers.CheckWorn()
+  check(#itemLoadWaiters == 1, "the hole asked the client to call back when its item loads")
   C_Item.GetItemInfo = realInfo
-  fire("GET_ITEM_INFO_RECEIVED"); runTimers()
+  loadItems(); runTimers()
   me = ns.Character.Self()
   check(me.slots[slot] ~= nil and me.incomplete == nil, "the picture is rebuilt whole when the item data arrives")
   check(ns.db.chars[key].slots[slot] ~= nil, "and the saved snapshot is whole too")
   check(ns.Triggers.WornRebuilds() == 1 and table.concat(ns.Status.Lines(), "\n"):find("re-read 1 time after item data arrived", 1, true) ~= nil,
     "status counts the re-read, so a cold start can be told from a warm one")
+  -- The debug command fakes cold pieces whose data is in fact loaded, so
+  -- the callbacks run at once and only the deferral stands between the
+  -- holes and the rebuild.
+  local worn = 0
+  for s = 1, 17 do if equipped[s] then worn = worn + 1 end end
+  slash("probe cold")
+  check(ns.Character.Self().incomplete == math.min(3, worn), "probe cold leaves holes (" .. tostring(ns.Character.Self().incomplete) .. " of " .. worn .. " worn)")
+  for _ = 1, 4 do runTimers() end
+  check(ns.Character.Self().incomplete == nil and ns.Triggers.WornRebuilds() == 2, "the load callbacks rebuild the picture, no clock involved")
 end
 -- A send has a life: suggested until Tester says "Will send" or the item
 -- turns up in a warband tab, then banked until Altie picks it up. The

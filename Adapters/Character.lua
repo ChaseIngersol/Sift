@@ -77,16 +77,43 @@ function Character.ObserveWatermark(facts)
 end
 
 -- Full context for the engine. Cached until Invalidate().
+-- Debug: the next few builds treat this many worn pieces as not cached
+-- yet, so the retry path, waiting included, can be watched in a live client.
+local coldTest
+function Character.ColdTest(n, builds)
+  coldTest = { slots = n or 3, builds = builds or 2 }
+  selfCache = nil
+end
+
 function Character.Self()
   if selfCache then return selfCache end
   local _, _, classID = UnitClass("player")
   -- A worn piece the client has not cached yet leaves a hole; the count
   -- of holes marks the snapshot incomplete so Triggers asks again when
   -- the item data arrives.
-  local slots, missing = {}, nil
+  local slots, missing, holes = {}, nil, {}
+  local cold = coldTest and coldTest.slots or 0
   for _, slot in ipairs(EQUIP_SLOTS) do
     local f, why = ns.ItemFacts.FromEquipped(slot)
-    if f then slots[slot] = f elseif why == "uncached" then missing = (missing or 0) + 1 end
+    if f and cold > 0 then f, why, cold = nil, "uncached", cold - 1 end
+    if f then slots[slot] = f elseif why == "uncached" then missing = (missing or 0) + 1; holes[#holes + 1] = slot end
+  end
+  if coldTest then
+    coldTest.builds = coldTest.builds - 1
+    if coldTest.builds <= 0 then coldTest = nil end
+  end
+  -- Each hole asks the client to call back when that item's data has
+  -- loaded. The callback steps out of the load path first, so a build in
+  -- progress is never re-entered; the rebuild itself is event-driven.
+  if missing and Item and Item.CreateFromEquipmentSlot then
+    for _, slot in ipairs(holes) do
+      local it = Item:CreateFromEquipmentSlot(slot)
+      if not it:IsItemEmpty() then
+        it:ContinueOnItemLoad(function()
+          C_Timer.After(0, ns.Guard.Wrap(function() if ns.Triggers then ns.Triggers.CheckWorn() end end))
+        end)
+      end
+    end
   end
   local cdb = ns.cdb or {}
   local key = Character.Key()

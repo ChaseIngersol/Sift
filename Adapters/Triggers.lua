@@ -185,18 +185,16 @@ local function onBagUpdate()
   refreshPanel()
 end
 
--- Worn gear the client had not cached yet leaves holes in the snapshot,
--- and every verdict against a hole says the slot is empty. Keep asking
--- while it is incomplete; once whole, rebuild the picture and re-run
--- everything that was judged against the holes.
+-- Worn gear the client had not loaded yet leaves holes in the snapshot,
+-- and every verdict against a hole says the slot is empty. The snapshot
+-- asks the client to call back as each missing item loads; this runs
+-- then. Still incomplete, the new build has asked again; whole, rebuild
+-- the picture and re-run everything that was judged against the holes.
 local wornRebuilds = 0
 local function checkWorn()
   if not ns.Character.Self().incomplete then return end
   ns.Character.Invalidate()
-  if ns.Character.Self().incomplete then
-    frame:RegisterEvent("GET_ITEM_INFO_RECEIVED")
-    return
-  end
+  if ns.Character.Self().incomplete then return end
   wornRebuilds = wornRebuilds + 1
   ns.Log("info", "worn gear read whole after item data arrived; verdicts re-run")
   ns.Verdicts.InvalidateAll()
@@ -204,6 +202,7 @@ local function checkWorn()
   ns.Verdicts.ScanAll()
   reevaluate("Update:")
   Triggers.SyncWakeEvents()
+  refreshPanel()
 end
 function Triggers.CheckWorn() checkWorn() end
 -- How many times this session the worn picture had to be read again;
@@ -294,7 +293,6 @@ local function onEnterWorld()
     scanBags()
     seeded = true
     local whole = not ns.Character.Self().incomplete
-    if not whole then frame:RegisterEvent("GET_ITEM_INFO_RECEIVED") end
     ns.Character.Snapshot()
     ns.Resources.Discover()
     if whole then ns.Verdicts.ReevaluateHolds() end

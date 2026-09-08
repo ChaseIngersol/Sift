@@ -25,7 +25,7 @@ local function usage()
   ns.Print("  Add copy to any command (/sift status copy) to open that box right away.")
   ns.Print("  /siftloot is the same command, for when another addon has claimed /sift.")
   if ns.DB.Prefs().debug then
-    ns.Print("  /sift probe      run the API verification probe (watch, stop, bank)")
+    ns.Print("  /sift probe      run the API verification probe (watch, stop, bank, cold)")
     ns.Print("  /sift refresh    re-run every hold and cached verdict")
     ns.Print("  /sift currency <track|catalyst> <id>   set a currency id by hand")
     ns.Print("  /sift reset confirm   wipe every snapshot, hold and preference")
@@ -98,6 +98,12 @@ local handlers = {
     end
     if rest == "bank" then
       ns.Bank.Probe()
+      return
+    end
+    if rest == "cold" then
+      ns.Character.ColdTest(3)
+      ns.Triggers.CheckWorn()
+      ns.Print("three worn pieces treated as not loaded yet; their load callbacks rebuild the picture. /sift status shows the re-read.")
       return
     end
     ns.Probe.Run()
