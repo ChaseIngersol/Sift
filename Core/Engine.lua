@@ -359,6 +359,11 @@ end
 
 -- Measured weights (imported or SimC) earn a percentage; shipped
 -- priorities only earn a tier word.
+local PLURAL_SLOT = { shoulders = true, legs = true, boots = true, wrists = true, gloves = true }
+local function emptyText(label)
+  return string.format("Your %s %s empty", label, PLURAL_SLOT[label] and "are" or "is")
+end
+
 local function measured(cmp)
   return cmp.source == "imported" or cmp.source == "simc"
 end
@@ -402,7 +407,7 @@ end
 
 local function briefVersus(cmp, threshold)
   if cmp.emptySlot then
-    return nil, string.format("Your %s is empty", ns.Slots.LABEL[cmp.incumbent and cmp.incumbent.slot or 0] or "slot"), "up"
+    return nil, emptyText(ns.Slots.LABEL[cmp.incumbent and cmp.incumbent.slot or 0] or "slot"), "up"
   end
   local p = cmp.now and cmp.now.pct
   local name = "vs " .. (cmp.incumbent and cmp.incumbent.item and cmp.incumbent.item.name or "equipped item")
@@ -469,6 +474,7 @@ end
 local function slotLabel(cmp)
   return ns.Slots.LABEL[cmp.incumbent and cmp.incumbent.slot or 0] or "slot"
 end
+
 
 -- Build the SEND target list from alts. Close calls are kept aside: a
 -- sidegrade is not worth a trip to the bank.
@@ -712,7 +718,7 @@ function Engine.Evaluate(ctx)
       elseif not gain then
         v.kind = KIND.EQUIP
         if primary.emptySlot then
-          v.reason = string.format("Equip. Your %s is empty.", slotLabel(primary))
+          v.reason = "Equip. " .. emptyText(slotLabel(primary)) .. "."
         else
           v.reason = string.format("Equip. %s %s for %s.", versus(primary, threshold), incName, spec)
         end

@@ -185,12 +185,32 @@ local function onBagUpdate()
   refreshPanel()
 end
 
+-- Worn gear the client had not cached yet leaves holes in the snapshot,
+-- and every verdict against a hole says the slot is empty. Keep asking
+-- while it is incomplete; once whole, rebuild the picture and re-run
+-- everything that was judged against the holes.
+local function checkWorn()
+  if not ns.Character.Self().incomplete then return end
+  ns.Character.Invalidate()
+  if ns.Character.Self().incomplete then
+    frame:RegisterEvent("GET_ITEM_INFO_RECEIVED")
+    return
+  end
+  ns.Verdicts.InvalidateAll()
+  ns.Character.Snapshot()
+  ns.Verdicts.ScanAll()
+  reevaluate("Update:")
+  Triggers.SyncWakeEvents()
+end
+function Triggers.CheckWorn() checkWorn() end
+
 local function retryUncached()
   local list = {}
   for guid, s in pairs(pendingUncached) do list[#list + 1] = s end
   pendingUncached = {}
   frame:UnregisterEvent("GET_ITEM_INFO_RECEIVED")
   if #list > 0 then evaluateSlots(list) end
+  checkWorn()
   refreshPanel()
 end
 
@@ -267,9 +287,11 @@ local function onEnterWorld()
     if ns.Specs.Source() ~= "client" then ns.SpecScan.Load() end
     scanBags()
     seeded = true
+    local whole = not ns.Character.Self().incomplete
+    if not whole then frame:RegisterEvent("GET_ITEM_INFO_RECEIVED") end
     ns.Character.Snapshot()
     ns.Resources.Discover()
-    ns.Verdicts.ReevaluateHolds()
+    if whole then ns.Verdicts.ReevaluateHolds() end
     Triggers.SyncWakeEvents()
     if ns.Minimap then ns.Minimap.Init() end
     ns.Character.StaleNudge()

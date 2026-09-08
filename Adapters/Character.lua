@@ -80,10 +80,13 @@ end
 function Character.Self()
   if selfCache then return selfCache end
   local _, _, classID = UnitClass("player")
-  local slots = {}
+  -- A worn piece the client has not cached yet leaves a hole; the count
+  -- of holes marks the snapshot incomplete so Triggers asks again when
+  -- the item data arrives.
+  local slots, missing = {}, nil
   for _, slot in ipairs(EQUIP_SLOTS) do
-    local f = ns.ItemFacts.FromEquipped(slot)
-    if f then slots[slot] = f end
+    local f, why = ns.ItemFacts.FromEquipped(slot)
+    if f then slots[slot] = f elseif why == "uncached" then missing = (missing or 0) + 1 end
   end
   local cdb = ns.cdb or {}
   local key = Character.Key()
@@ -93,7 +96,7 @@ function Character.Self()
     key = key, name = UnitName("player"), realm = GetRealmName(),
     classID = classID, level = UnitLevel("player") or 0,
     specs = specList(Character.ActiveSpecID(), cdb.extraSpecs),
-    slots = slots, tierCount = tierCount, tierSetID = tierSetID,
+    slots = slots, tierCount = tierCount, tierSetID = tierSetID, incomplete = missing,
     importedWeights = cdb.imported, parked = cdb.parked or false,
     watermarks = ns.db.watermarks[key],
   }
@@ -104,6 +107,9 @@ end
 -- Persist this character for other characters to route against.
 function Character.Snapshot()
   local me = Character.Self()
+  -- A snapshot with holes must not replace a whole one; the retry writes
+  -- it once the gear is complete.
+  if me.incomplete and ns.db.chars[me.key] then return end
   local compact = {}
   for slot, f in pairs(me.slots) do compact[slot] = ns.ItemFacts.Compact(f) end
   local specIDs = {}

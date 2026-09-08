@@ -855,6 +855,23 @@ do -- The open panel follows the events that change what it shows.
   ns.Panel.Refresh = real
   check(afterEquip >= 1 and count > afterEquip, "an open panel refreshes after equipment and bag events (" .. afterEquip .. "/" .. count .. ")")
 end
+do -- Worn gear the client has not cached yet: a hole now, whole once the data lands.
+  local key, slot = ns.Character.Key(), nil
+  for s = 1, 17 do if equipped[s] then slot = s break end end
+  local coldID, realInfo = equipped[slot].id, C_Item.GetItemInfo
+  C_Item.GetItemInfo = function(l) if idOf(l) == coldID then return nil end return realInfo(l) end
+  ns.Character.Invalidate()
+  local me = ns.Character.Self()
+  check(me.slots[slot] == nil and me.incomplete == 1, "an uncached worn piece leaves a hole and marks the snapshot incomplete")
+  ns.Character.Snapshot()
+  check(ns.db.chars[key].slots[slot] ~= nil, "an incomplete snapshot leaves the saved one alone")
+  ns.Triggers.CheckWorn()
+  C_Item.GetItemInfo = realInfo
+  fire("GET_ITEM_INFO_RECEIVED"); runTimers()
+  me = ns.Character.Self()
+  check(me.slots[slot] ~= nil and me.incomplete == nil, "the picture is rebuilt whole when the item data arrives")
+  check(ns.db.chars[key].slots[slot] ~= nil, "and the saved snapshot is whole too")
+end
 -- A send has a life: suggested until Tester says "Will send" or the item
 -- turns up in a warband tab, then banked until Altie picks it up. The
 -- bank reminder lands on the toast and leaves as items move.

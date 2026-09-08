@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.2 - 2026-09-07
+
+- Worn gear the client had not loaded yet at login left holes in Sift's
+  picture of you, and every verdict against a hole called the slot empty.
+  Sift now waits for the item data and re-runs everything once it has it.
+- Slots with plural names read right: your legs are empty.
+
 ## 1.0.1 - 2026-09-07
 
 - Listed on CurseForge. The project id in the TOC lets the CurseForge app

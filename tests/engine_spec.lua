@@ -206,6 +206,10 @@ describe("Engine brief", function()
     local empty = F.eval({ item = F.item(), self = me })
     expect(empty.brief.gain).toBeNil()
     expect(empty.brief.versus).toBe("Your chest is empty")
+    me.slots[S.LEGS] = nil
+    local legs = F.eval({ item = F.item({ equipLoc = "INVTYPE_LEGS" }), self = me })
+    expect(legs.brief.versus).toBe("Your legs are empty")
+    expect(legs.reason).toBe("Equip. Your legs are empty.")
   end)
 
   it("puts the upgrade count and cost in the condition of a hold", function()
