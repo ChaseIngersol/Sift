@@ -159,7 +159,8 @@ end
 local function header(entries)
   local first, last = entries[1], entries[#entries]
   local span = clock(first.t, "%a %H:%M")
-  if last.t ~= first.t then span = span .. " to " .. clock(last.t, "%H:%M") end
+  local finish = clock(last.t, "%H:%M")
+  if finish ~= clock(first.t, "%H:%M") then span = span .. " to " .. finish end
   return string.format("%s, %s, %d entr%s", last.where or "?", span, #entries, #entries == 1 and "y" or "ies")
 end
 
