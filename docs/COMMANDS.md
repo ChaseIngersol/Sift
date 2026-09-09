@@ -84,8 +84,8 @@ and growth calibration state; whether the character is parked.
 ### /sift vault
 
 Rank what the Great Vault is offering. The vault window must be open; the
-same ranking sits under the window, heads the panel and is announced in
-chat once per opening.
+same ranking marks the cards in the window, heads the panel and is
+announced in chat once per opening.
 
 `/sift vault preview`: run the picker on the example items the game shows
 for the slots earned this week, so the flow can be tried before the

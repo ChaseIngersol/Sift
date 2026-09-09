@@ -6,6 +6,12 @@
   or bank something. It starts at the top only when you open it.
 - The panel's default width is narrower, to fit the shorter row text.
   Double-click the corner grip to return to it.
+- The Great Vault ranking now sits on the vault's own cards: Take with
+  the gain and a jade edge on the pick, Good, Sim it or Pass on the rest,
+  and one sentence under the window instead of a line per item. The
+  word is set in the card's own item-level type, so it reads as part of
+  the window. The full reason is still in each card's tooltip and in
+  `/sift vault`.
 
 ## 1.0.3 - 2026-09-07
 

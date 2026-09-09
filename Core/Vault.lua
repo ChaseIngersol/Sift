@@ -171,6 +171,50 @@ function VaultRank.Line(o)
   return text
 end
 
+-- The word on a vault card and the number beside it: word, color kind,
+-- gain text, gain sign. The gain rides along only where it is the point:
+-- a sure gain, or a pass that loses. nil for something that is not gear.
+function VaultRank.Badge(o)
+  if not o.verdict then return nil end
+  local word, kind = VaultRank.Verb(o), VaultRank.Kind(o)
+  local b = o.verdict.brief
+  local gain = b and b.gain
+  if gain and (o.tier == 5 or o.tier == 0) and gain:match("^[%+%-]%d") then
+    return word, kind, gain, b.sign or "flat"
+  end
+  return word, kind, nil, nil
+end
+
+-- One short sentence under the vault window, built from the pick's
+-- brief in the same fixed slots the panel uses. Chat keeps the long form.
+function VaultRank.Footer(ranked)
+  local best = ranked and ranked[1]
+  if not best then return "Nothing to pick yet." end
+  local name = best.name or "?"
+  if best.tier == 5 then
+    local b = best.verdict.brief
+    local text
+    if b and b.gain then
+      text = string.format("Take %s. %s %s%s.", name, b.gain, b.versus or "", b.when and (", " .. b.when) or "")
+      if b.note and b.note ~= "" then text = text .. " " .. b.note end
+    else
+      text = string.format("Take %s. %s", name, VaultRank.Short(best.verdict))
+    end
+    return text
+  elseif best.tier == 4 then
+    return string.format("No sure upgrade here. Sim %s before you pick.", name)
+  elseif best.tier == 3 then
+    return string.format("Nothing here owns a slot for long. %s is ahead today.", name)
+  elseif best.tier == 2 then
+    return string.format("Nothing for your main spec. %s is the pick for your other spec.", name)
+  elseif best.tier == 1 then
+    local t = best.verdict.target
+    local who = t and t.char and t.char.name or "an alt"
+    return string.format("Nothing here helps you. Send %s to %s.", name, who)
+  end
+  return "Nothing here beats what you have or hold. Pick what vendors best."
+end
+
 -- One line for an item tooltip while the vault is open.
 function VaultRank.PlaceText(o, total)
   if o.place == 1 and o.tier == 5 then return "Great Vault: take this one." end

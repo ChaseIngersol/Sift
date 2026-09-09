@@ -31,8 +31,9 @@ Target client: Midnight 12.1 and later. No addon dependencies.
   upgraded is a dead end, and says so ("Outclassed by Hero Chest in your
   bags"), even when it is ahead right now.
 - Knows the catalyst, so a piece that completes your 2-set or 4-set says so.
-- Ranks the Great Vault while it is open: "Take Boots (Delves tier 8):
-  +4.2% vs Sandals for Devourer. Trinket would need a sim to compete."
+- Marks the Great Vault's cards while it is open: "Take +4.2%" on the
+  pick, "Good", "Sim it" or "Pass" on the rest, and one sentence under
+  the window.
 - Puts its word beside every Need/Greed roll window: "Need" with the gain,
   "Sim it" when it is close, "Greed" when an alt wants it, "Pass" when it
   is a dead end.

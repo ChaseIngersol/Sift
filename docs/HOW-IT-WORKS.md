@@ -128,8 +128,9 @@ would be worth wearing then, it is a Hold that wakes when you level.
 - **Rolls.** A word beside every Need and Greed window: Need with the
   gain, Sim it when close, Greed when an alt wants it, Pass when it is a
   dead end. Nothing is rolled for you.
-- **Great Vault.** A ranking of the offers under the vault window while
-  it is open.
+- **Great Vault.** A word on each card of the vault window: Take with
+  the gain and a jade edge on the pick, Good, Sim it or Pass, and one
+  sentence under the window. The full reason is in the card's tooltip.
 - **The guide.** Four pages at the first login, and `/sift guide` after.
 
 ## Settings

@@ -45,7 +45,7 @@ Sift/
     Toast.lua          the toast stack
     EditMode.lua, EditModePanel.lua   Edit Mode placement for the toast
     LootRoll.lua       the strip beside a roll window
-    Vault.lua          the ranking under the vault window
+    Vault.lua          the words on the vault window's cards
     AltCompare.lua     "Equipped on <alt>" panes beside a send row
     Weights.lua        the stat weights sheet
     Guide.lua          the four-page guide

@@ -118,7 +118,7 @@ local function refresh()
   else
     frame:UnregisterEvent("GET_ITEM_INFO_RECEIVED")
   end
-  if ns.VaultUI then ns.VaultUI.Update(list, line, wait, false) end
+  if ns.VaultUI then ns.VaultUI.Update(list, wait, false) end
   if ns.Panel then ns.Panel.Refresh() end
   if #list > 0 and not wait and not announced then
     announced = true
@@ -156,7 +156,7 @@ end
 function Vault.Preview()
   local list, line, wait = Vault.Evaluate(true)
   if Vault.IsOpen() then
-    if ns.VaultUI then ns.VaultUI.Update(list, line, wait, preview) end
+    if ns.VaultUI then ns.VaultUI.Update(list, wait, preview) end
     if ns.Panel then ns.Panel.Refresh() end
   end
   local out = Vault.Describe()

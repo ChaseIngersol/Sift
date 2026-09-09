@@ -34,6 +34,8 @@ Widget.__index = function(t, k)
   if k == "GetFrameLevel" then return function(self) return self.__level or 1 end end
   if k == "SetShown" then return function(self, shown) self.__shown = shown and true or false end end
   if k == "SetHeight" then return function(self, h) self.__height = h end end
+  if k == "SetFont" then return function(self, f, s, fl) self.__font = { f, s, fl } end end
+  if k == "GetFont" then return function(self) if self.__font then return unpack(self.__font) end end end
   if k == "SetFrameStrata" then return function(self, s) self.__strata = s end end
   if k == "SetFrameLevel" then return function(self, l) self.__level = l end end
   if k == "EnableMouse" then return function(self, on) self.__mouse = on and true or false end end
@@ -1213,6 +1215,24 @@ end
 
 -- Great Vault: the window loads on demand, Sift hooks it, ranks the offers.
 WeeklyRewardsFrame = CreateFrame("Frame", "WeeklyRewardsFrame")
+-- The window's cards, as the game keys them: one per activity type and
+-- index, each showing one reward item by its database id.
+WeeklyRewardsFrame.Activities = {}
+local function vaultCard(t, i, dbid)
+  local af = CreateFrame("Frame", nil, WeeklyRewardsFrame)
+  af.type, af.index = t, i
+  af.ItemFrame = CreateFrame("Frame", nil, af)
+  af.ItemFrame.displayedItemDBID = dbid
+  af.Progress = af:CreateFontString()
+  table.insert(WeeklyRewardsFrame.Activities, af)
+  return af
+end
+function WeeklyRewardsFrame:GetActivityFrame(t, i)
+  for _, af in ipairs(self.Activities) do
+    if af.type == t and af.index == i then return af end
+  end
+end
+vaultCard(6, 1, "db1"); vaultCard(1, 1, "db2"); vaultCard(3, 1, "db3"); vaultCard(3, 2, nil)
 fire("ADDON_LOADED", "Blizzard_WeeklyRewards")
 vaultLinks = { db1 = link(1003), db2 = link(1006), db3 = link(1004) }
 vaultActivities = {
@@ -1230,6 +1250,25 @@ check(ranked and ranked[1].name == "Hero Bracers" and ranked[1].source == "Mythi
 check(headline and headline:find("Take Hero Bracers (Mythic+ 10)", 1, true) ~= nil, "vault headline: " .. tostring(headline))
 check(ranked and ranked[3].source == "Raid Heroic" and ranked[3].verdict.kind == "DISPOSE", "intellect trinket from Raid Heroic is last, a dispose for a warrior")
 check(_G.SiftLootAdvisorVault and _G.SiftLootAdvisorVault.__shown, "vault strip shown under the vault window")
+do
+  local head = _G.SiftLootAdvisorVault.head.__text or ""
+  check(head:find("^Take Hero Bracers%. %+3%.4%% vs Worn Bracers, after 1 upgrade, 20 Hero crests%. ") and not head:find("(Mythic", 1, true), "the footer is one short sentence from the brief: " .. head)
+  local function badge(t, i) local af = WeeklyRewardsFrame:GetActivityFrame(t, i); return af and af.siftBadge end
+  local take = badge(1, 1)
+  check(take and take.__shown and (take.word.__text or ""):find("^Take |cff%x+%+") and take.edge.__shown,
+    "the pick's card says Take with the gain and a jade edge (" .. tostring(take and take.word.__text) .. ")")
+  local words = {}
+  for _, af in ipairs(WeeklyRewardsFrame.Activities) do
+    if af.siftBadge and af.siftBadge.__shown then words[#words + 1] = af.siftBadge.word.__text:gsub("|c%x+", ""):gsub("|r", "") .. (af.siftBadge.edge.__shown and "*" or "") end
+  end
+  check(#words == 3, "three cards carry a word, one with the edge: " .. table.concat(words, ", "))
+  check(not badge(3, 2), "an unearned card gets nothing")
+  -- A restyle of the card's own text after it shows carries over at once.
+  local af = WeeklyRewardsFrame:GetActivityFrame(1, 1)
+  af.Progress:SetFont("Fonts\\ARIALN.TTF", 10, "OUTLINE")
+  check(take.word.__font and take.word.__font[1] == "Fonts\\ARIALN.TTF" and take.word.__font[2] == 10 and take.word.__font[3] == "OUTLINE",
+    "the word follows the card's text when its font changes")
+end
 check(sawLine("Great Vault:", "Take Hero Bracers"), "vault pick announced in chat once")
 GameTooltip.__lines = {}
 GameTooltip.__owner = newWidget("VaultItem")
@@ -1246,6 +1285,10 @@ check(ns.db.watermarks["Tester-Realm"].wrist == 305, "a vault offer does not rai
 WeeklyRewardsFrame.__shown = false
 ns.Vault.OnHide()
 check(not _G.SiftLootAdvisorVault.__shown and ns.Vault.Current() == nil, "vault strip hidden and ranking cleared on close")
+do
+  local af = WeeklyRewardsFrame:GetActivityFrame(1, 1)
+  check(af.siftBadge and not af.siftBadge.__shown, "the card words go with the window")
+end
 ns.db.prefs.vault = false
 WeeklyRewardsFrame.__shown = true
 ns.Vault.OnShow()
