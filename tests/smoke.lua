@@ -1578,6 +1578,8 @@ do
   ns.Panel.Toggle()
 
   -- A send is a keep for an alt, said so, with the group given first call.
+  local freeText = G.Text(rowMine.entry.t.facts, { kind = "HOLD", sub = "upgrade", brief = { gain = "+1.5%", when = "after 5 upgrades, free" } })
+  check(freeText == "Sift: " .. link(1006) .. " +1.5% for me after 5 upgrades. Taking it.", "a free upgrade's cost stays out of the line: " .. freeText)
   local sendText = G.Text(rowTheirs.entry.t.facts, { kind = "SEND", reason = "Send to Garumis: x", brief = { gain = "+9%", who = "Garumis" } })
   check(sendText == "Sift: " .. link(1007) .. " is for an alt of mine, unless someone here needs it. Plate: Marcus?", "a send says the alt has it unless someone needs it: " .. sendText)
 

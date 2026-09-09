@@ -158,11 +158,12 @@ local function listNames(names)
   return table.concat(names, ", ", 1, #names - 1) .. " or " .. names[#names]
 end
 
--- The condition without the crest cost: "after 1 upgrade".
+-- The condition without the cost: "after 2 upgrades", whether the
+-- brief said ", 40 Champion crests" or ", free".
 local function plainWhen(b)
   local w = b and b.when
   if not w then return nil end
-  w = w:gsub(",%s*%d+%s+%a+%s+crests?", "")
+  w = w:gsub(",%s*%d+%s+%a+%s+crests?", ""):gsub(",%s*free$", "")
   return w
 end
 
