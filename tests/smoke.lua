@@ -333,8 +333,39 @@ C_SpecializationInfo = {
   end,
   GetNumSpecializationsForClassID = function(classID) return CLASS_SPECS[classID] and #CLASS_SPECS[classID] or 0 end,
 }
-function UnitName() return "Tester" end
-function UnitClass() return "Warrior", "WARRIOR", 1 end
+-- The group: kind is nil, "party", "raid" or "instance"; members are the
+-- others, by unit. Reinstall the unit-aware names after a test swaps
+-- UnitName for an alt.
+local group = { kind = nil, members = {} }
+local chatSent = {}
+LE_PARTY_CATEGORY_INSTANCE = 2
+UNKNOWNOBJECT = "Unknown"
+BIND_TRADE_TIME_REMAINING = "You may trade this item with players that were also eligible to loot this item for the next %s."
+function IsInGroup(cat) if cat == 2 then return group.kind == "instance" end return group.kind ~= nil end
+function IsInRaid() return group.kind == "raid" end
+function GetNumGroupMembers() if not group.kind then return 0 end return #group.members + 1 end
+function UnitIsUnit(a, b) return a == b or (a == "raid1" and b == "player") end
+function SendChatMessage(text, channel) chatSent[#chatSent + 1] = { text = text, channel = channel } end
+local function memberOf(unit)
+  local i = unit:match("^party(%d+)$")
+  if i then return group.members[tonumber(i)] end
+  i = unit:match("^raid(%d+)$")
+  if i then return group.members[tonumber(i) - 1] end
+  return nil
+end
+local function installUnits()
+  UnitName = function(unit)
+    local m = unit and memberOf(unit)
+    if m then return m.name end
+    return "Tester"
+  end
+  UnitClass = function(unit)
+    local m = unit and memberOf(unit)
+    if m then return m.className, m.classFile, m.classID end
+    return "Warrior", "WARRIOR", 1
+  end
+end
+installUnits()
 function UnitLevel() return 80 end
 function UnitAffectingCombat() return false end
 function GetRealmName() return "Realm" end
@@ -701,7 +732,7 @@ do -- The command reference: one row per command, developer rows only with debug
     end
   end
   check(#missing == 0, "every command has a row on the settings page (missing: " .. table.concat(missing, ", ") .. ")")
-  check(user == 13 and dev == 4, "thirteen player rows and four developer rows (" .. user .. "/" .. dev .. ")")
+  check(user == 13 and dev == 5, "thirteen player rows and five developer rows (" .. user .. "/" .. dev .. ")")
   -- The Defaults button restores what ships, not what was set at login
   -- (debug was on in this world from the start).
   check(settingsDefaults.debug == false and settingsDefaults.toast == true and settingsDefaults.sound == false and settingsDefaults.parked == false,
@@ -1439,6 +1470,160 @@ do
   before = #printed
   slash("journal")
   check(#printed == before + 1 and printed[before + 1]:find("nothing on record yet", 1, true), "an empty journal says so")
+end
+
+-- Telling the group. Nothing is live: every click is a dry run printed
+-- here and journaled, and the buttons show only in debug mode. Two
+-- pieces with the trade window still open land in a party of three.
+do
+  installUnits()
+  local G = ns.GroupChat
+  check(G.LIVE == false, "group chat ships with the live switch off")
+  local tradeLine = { type = 0, leftText = "You may trade this item with players that were also eligible to loot this item for the next 1 hour 58 min." }
+  table.insert(ITEMS[1006].tooltip, tradeLine)
+  table.insert(ITEMS[1007].tooltip, tradeLine)
+  group.kind = "party"
+  group.members = {
+    { name = "Marcus", className = "Paladin", classFile = "PALADIN", classID = 2 },
+    { name = "Elena", className = "Mage", classFile = "MAGE", classID = 8 },
+    { name = "Bob", className = "Rogue", classFile = "ROGUE", classID = 4 },
+  }
+  check(G.Channel() == "PARTY" and G.Label() == "Tell party" and #G.Members() == 3 and G.Members()[2].name == "Elena", "party channel, label and members read from the group")
+  ns.db.prefs.debug = false
+  check(not G.Showing(), "before the flip the buttons stay hidden without debug mode")
+  ns.db.prefs.debug = true
+  check(G.Showing(), "with debug mode on they show, as a dry run")
+
+  ns.db.prefs.toast = true
+  ns.Toast.Clear()
+  local mine = putInBag(1, 1, 1006)
+  local theirs = putInBag(1, 2, 1007)
+  fire("BAG_UPDATE_DELAYED"); runTimers()
+  local rowMine, rowTheirs
+  for i = 1, 8 do
+    local r = ns.Toast.Row(i)
+    if r and r.entry then
+      if r.entry.t.link == link(1006) then rowMine = r end
+      if r.entry.t.link == link(1007) then rowTheirs = r end
+    end
+  end
+  check(rowMine and rowMine.entry.t.facts and rowMine.entry.t.facts.tradeable == true, "the trade window line marks the piece tradeable")
+  check(rowMine and rowMine.tell.__shown and rowTheirs and rowTheirs.tell.__shown, "both tradeable rows offer Tell party")
+
+  before = #printed
+  local jn = #ns.Journal.Entries()
+  rowMine.tell.__scripts.OnClick(rowMine.tell)
+  local want = "Sift: " .. link(1006) .. " +3.4% for me after 1 upgrade. Taking it."
+  check(#chatSent == 0, "nothing goes to the group while the switch is off")
+  check(#printed == before + 1 and printed[#printed]:find("would post to PARTY: " .. want, 1, true), "the dry run prints the line for a drop of mine: " .. tostring(printed[#printed]))
+  local je = ns.Journal.Entries()[#ns.Journal.Entries()]
+  check(#ns.Journal.Entries() == jn + 1 and je.kind == "dryrun" and je.channel == "PARTY" and je.text == want and je.word == "Upgrade" and je.link == link(1006), "the dry run is in the journal with the channel, the text and the verdict")
+
+  before = #printed
+  rowTheirs.tell.__scripts.OnClick(rowTheirs.tell)
+  local ask = "Sift: " .. link(1007) .. " not for me. Plate: Marcus?"
+  check(printed[#printed]:find("would post to PARTY: " .. ask, 1, true), "a piece not for me asks the one who could wear it: " .. tostring(printed[#printed]))
+  je = ns.Journal.Entries()[#ns.Journal.Entries()]
+  check(je.wear == "Marcus" and je.word == "Dispose", "the journal keeps who could wear it")
+
+  -- A fixed-stat piece narrows by the primary stat a class's specs use:
+  -- an intellect trinket fits the paladin (Holy) and the mage, not the
+  -- rogue. Nobody fitting says anyone.
+  local names, kind = G.Wearers({ classID = 4, subclassID = 0, equipLoc = "INVTYPE_TRINKET", stats = { INTELLECT = 500 } })
+  check(#names == 2 and names[1] == "Marcus" and names[2] == "Elena" and kind == "A trinket, intellect", "a trinket with a fixed stat is described by stat and fits by spec (" .. tostring(kind) .. ", " .. #names .. ")")
+  local text = G.Text({ link = link(1004), classID = 4, subclassID = 0, equipLoc = "INVTYPE_TRINKET", stats = { INTELLECT = 500 } }, { kind = "DISPOSE", reason = "x" })
+  check(text == "Sift: " .. link(1004) .. " not for me. A trinket, intellect: Marcus or Elena?", "two fits are asked by name: " .. text)
+  local polearm = { link = link(1004), classID = 2, subclassID = ns.Data.WEAPON.POLEARM, equipLoc = "INVTYPE_2HWEAPON", stats = { AGILITY = 500 } }
+  names, kind = G.Wearers(polearm)
+  check(#names == 0 and kind == "Polearms, agility", "an agility polearm fits none of them (" .. tostring(kind) .. ", " .. #names .. ")")
+  check(G.Text(polearm, { kind = "DISPOSE", reason = "x" }) == "Sift: " .. link(1004) .. " not for me. Polearms, agility: anyone?", "with nobody fitting it asks anyone")
+  local many = { name = "Ann", className = "Mage", classFile = "MAGE", classID = 8 }
+  for _ = 1, 4 do group.members[#group.members + 1] = many end
+  names = G.Wearers({ classID = 4, subclassID = 1, equipLoc = "INVTYPE_CHEST", stats = {}, flex = { INTELLECT = true } })
+  check(#names == 5 and G.Text({ link = "[x]", classID = 4, subclassID = 1, equipLoc = "INVTYPE_CHEST", stats = {}, flex = { INTELLECT = true } }, { kind = "DISPOSE" }) == "Sift: [x] not for me. Cloth: Elena, Ann, Ann or 2 more?",
+    "past three names the ask counts the rest, to stay under the chat limit")
+  for _ = 1, 4 do table.remove(group.members) end
+
+  -- The roll strip offers Say why on a Need, and the line says what for.
+  rollLinks[7] = link(1006)
+  GroupLootFrame1.rollID = 7
+  showFrame(GroupLootFrame1)
+  local strip = ns.LootRollUI.Current(GroupLootFrame1)
+  check(strip and strip.verdict ~= nil, "the roll strip carries the verdict")
+  local stripFrame = ns.LootRollUI.Strip(GroupLootFrame1)
+  check(stripFrame and stripFrame.why.__shown, "Say why shows beside a Need in a group")
+  before = #printed
+  stripFrame.why.__scripts.OnClick(stripFrame.why)
+  check(printed[#printed]:find("would post to PARTY: Sift: needing " .. link(1006) .. " for +3.4% after 1 upgrade", 1, true), "Say why dry-runs the reason: " .. tostring(printed[#printed]))
+  hideFrame(GroupLootFrame1)
+  rollLinks[8] = link(1004)
+  GroupLootFrame2.rollID = 8
+  showFrame(GroupLootFrame2)
+  local passFrame = ns.LootRollUI.Strip(GroupLootFrame2)
+  check(passFrame and not passFrame.why.__shown, "no Say why on a Pass")
+  hideFrame(GroupLootFrame2)
+
+  -- The panel row for the held piece offers it on hover too.
+  if not ns.Panel.IsShown() then ns.Panel.Toggle() end
+  ns.Panel.Refresh()
+  local prow
+  for i = 1, 40 do local r = ns.Panel.Row(i); if r and r.__shown and r.link == link(1006) then prow = r end end
+  check(prow and prow.tellable == true, "the panel row for a held tradeable piece can tell the party")
+  prow.__scripts.OnEnter(prow)
+  check(prow.tell.__shown, "hovering the row shows Tell party")
+  before = #printed
+  prow.tell.__scripts.OnClick(prow.tell)
+  check(printed[#printed]:find("would post to PARTY: " .. want, 1, true), "the panel button posts the same line")
+  ns.Panel.Toggle()
+
+  -- Raid and instance groups pick their channel and label.
+  group.kind = "raid"
+  check(G.Channel() == "RAID" and G.Label() == "Tell raid" and #G.Members() == 3 and G.Members()[1].name == "Marcus", "a raid posts to RAID and skips me among the raid units")
+  group.kind = "instance"
+  check(G.Channel() == "INSTANCE_CHAT" and G.Label() == "Tell group", "an instance group posts to INSTANCE_CHAT")
+  group.kind = "party"
+
+  -- Live and out of debug mode, the click sends; live in debug mode it
+  -- still dry-runs.
+  G.LIVE = true
+  ns.db.prefs.debug = false
+  before = #printed
+  rowMine.tell.__scripts.OnClick(rowMine.tell)
+  check(#chatSent == 1 and chatSent[1].channel == "PARTY" and chatSent[1].text == want, "live, the click sends the exact line to PARTY")
+  check(#printed == before, "and prints nothing of its own")
+  je = ns.Journal.Entries()[#ns.Journal.Entries()]
+  check(je.kind == "post" and je.text == want, "a real post is journaled as a post")
+  ns.db.prefs.debug = true
+  rowMine.tell.__scripts.OnClick(rowMine.tell)
+  check(#chatSent == 1, "live with debug mode on is still a dry run")
+  G.LIVE = false
+
+  -- The setting hides every button.
+  ns.db.prefs.groupChat = false
+  ns.Toast.Refresh()
+  check(not G.Showing() and not rowMine.tell.__shown, "the setting off hides the buttons")
+  ns.db.prefs.groupChat = true
+
+  -- /sift chat test works outside a group, /sift chat says where things stand.
+  group.kind = nil
+  group.members = {}
+  check(not G.Showing(), "out of a group nothing is offered")
+  before = #printed
+  jn = #ns.Journal.Entries()
+  slash("chat test")
+  local dry = 0
+  for i = before + 1, #printed do if printed[i]:find("would post to PARTY: Sift: ", 1, true) then dry = dry + 1 end end
+  check(dry == ns.Toast.Count() and dry >= 2 and #ns.Journal.Entries() == jn + dry and #chatSent == 1, "/sift chat test dry-runs every toast row to PARTY and journals each")
+  before = #printed
+  slash("chat")
+  check(printed[before + 1]:find("not live yet", 1, true) and printed[before + 2]:find("not in a group", 1, true), "/sift chat says the switch is off and there is no group")
+
+  ns.db.prefs.debug = false
+  table.remove(ITEMS[1006].tooltip)
+  table.remove(ITEMS[1007].tooltip)
+  bags[1][1], bags[1][2] = nil, nil
+  fire("BAG_UPDATE_DELAYED"); runTimers()
+  ns.Toast.Clear()
 end
 
 -- Toast stack: rows arrive, a page shows a few, the wheel scrolls the

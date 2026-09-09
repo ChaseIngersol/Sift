@@ -33,6 +33,7 @@ Sift/
     Resources.lua      crest and catalyst currency discovery
     Verdicts.lua       verdict cache, hold records, send states, bag scans
     Journal.lua        the loot journal: pickups, rolls and group posts by run
+    GroupChat.lua      one click tells the group; the live switch and the dry run
     Triggers.lua       events, safe moments, wake registration, announcements
     Bank.lua           the warband bank: deposits, pickups, reminders
     Vault.lua          the Great Vault window

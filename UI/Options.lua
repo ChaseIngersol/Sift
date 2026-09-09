@@ -37,6 +37,9 @@ function Options.Register()
   checkbox("vault", "Advise on Great Vault picks", "Ranks the vault's items under the vault window, in the panel and in chat while the vault is open.")
   checkbox("lootRoll", "Advise on loot rolls", "Puts Sift's word (Need, Greed, Pass or Sim it) beside each Need/Greed window, with the reason.")
   checkbox("bankReminder", "Remind at the bank", "When a bank opens, rows on the toast for what to deposit for alts and what is waiting for you in the warband bank. They stay until the bank closes or the item moves. The chat line follows the chat setting.")
+  if ns.GroupChat and ns.GroupChat.LIVE then
+    checkbox("groupChat", "Offer to tell the group", "Tell party on a toast or panel row and Say why beside a roll, in a group, for loot the group can still be traded. Nothing is posted without your click.")
+  end
   checkbox("parked", "Park this character", "Parked characters never receive send suggestions.", cdb)
   checkbox("debug", "Debug mode", "Let errors reach BugSack with full traces instead of being swallowed, and list the developer commands in /sift help.")
 
@@ -143,6 +146,7 @@ function Options.Register()
       command("journal", "journal", "the last run", "Run", "What happened around each drop in your last run: every pickup with its verdict, every roll, every line posted to the group. Add all in chat for every run on file.")
       command("feedback", "feedback", "build a report", "Open", "A report to paste to the author, in a box you can copy from.", { leave = true })
       command("copy", "copy", "last output", "Open", "Reopen the last command's output in a box you can copy from.", { leave = true })
+      command("chat test", "chat test", nil, "Run", "Print what each toast row would post to the group, without posting. Writes each line to the journal.", { dev = true })
       command("probe", "probe", nil, "Run", "Check the game APIs Sift depends on and store the findings.", { dev = true })
       command("refresh", "refresh", nil, "Run", "Re-run every hold and cached verdict.", { dev = true })
       command("currency <track> <id>", "currency", nil, "Usage", "Pin a crest or catalyst currency id by hand. The button prints the usage; type the command in chat.", { dev = true })

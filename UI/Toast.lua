@@ -125,6 +125,18 @@ local function fill(r, t, sample)
   r.name:SetTextColor(qr, qg, qb)
   r.line:SetText(t.line or "")
   ns.AltCompare.Tag(r, (not sample) and t.altKey or nil, t.equipLoc)
+  -- One click tells the group, when the piece can be traded to it.
+  r.line:ClearAllPoints()
+  r.line:SetPoint("BOTTOMLEFT", r.icon, "BOTTOMRIGHT", 10, 0)
+  if not sample and ns.GroupChat and ns.GroupChat.Offers(t.facts) then
+    r.tell.label:SetText(ns.GroupChat.Label())
+    r.tell:SetWidth(r.tell.label:GetStringWidth() + 12)
+    r.tell:Show()
+    r.line:SetPoint("RIGHT", r.tell, "LEFT", -2, 0)
+  else
+    r.tell:Hide()
+    r.line:SetPoint("RIGHT", r, "RIGHT", -4, 0)
+  end
 end
 
 local function newRow(i)
@@ -155,6 +167,14 @@ local function newRow(i)
   local hover = r:CreateTexture(nil, "HIGHLIGHT")
   hover:SetAllPoints()
   hover:SetColorTexture(1, 1, 1, 0.05)
+
+  r.tell = Style.TextButton(r, "Tell party", Style.SIZE.meta, function()
+    local e = r.entry
+    if editing or not e or not e.t.facts then return end
+    ns.GroupChat.Tell(e.t.facts, e.t.verdict)
+  end)
+  r.tell:SetPoint("BOTTOMRIGHT", r, "BOTTOMRIGHT", -2, 1)
+  r.tell:Hide()
 
   r:SetScript("OnClick", Guard.Wrap(function(self)
     local e = self.entry

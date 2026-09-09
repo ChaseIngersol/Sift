@@ -37,6 +37,7 @@ Adapters\Character.lua
 Adapters\Resources.lua
 Adapters\Verdicts.lua
 Adapters\Journal.lua
+Adapters\GroupChat.lua
 Adapters\Bank.lua
 Adapters\Triggers.lua
 Adapters\Probe.lua

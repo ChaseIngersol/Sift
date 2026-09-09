@@ -81,12 +81,26 @@ local function readSocketLine(f, line)
   end
 end
 
+-- "You may trade this item with players that were also eligible..." up
+-- to its first placeholder, in the client's language.
+local tradeHead
+local function getTradeHead()
+  if tradeHead == nil then
+    local fmt = rawget(_G, "BIND_TRADE_TIME_REMAINING")
+    tradeHead = (type(fmt) == "string" and fmt:match("^(.-)%%")) or false
+    if tradeHead == "" then tradeHead = false end
+  end
+  return tradeHead
+end
+
 function Facts.ReadTooltip(f, data)
   if type(data) ~= "table" or type(data.lines) ~= "table" then return end
   local pattern = getUpgradePattern()
+  local trade = getTradeHead()
   for _, line in ipairs(data.lines) do
     local t = line.type
     local text = line.leftText
+    if trade and text and text:sub(1, #trade) == trade then f.tradeable = true end
     if t == LINE_SOCKET then
       readSocketLine(f, line)
     elseif t == LINE_UPGRADE and text then

@@ -60,7 +60,7 @@ local function toastFor(entry)
   local slots = ns.Slots.BY_EQUIPLOC[f.equipLoc]
   return {
     icon = f.icon, headline = ns.Engine.Headline(v), line = ns.Engine.BriefLine(v, ns.Style and ns.Style.GAIN_HEX) or v.reason, quality = f.quality,
-    verdict = v, link = f.link, compare = (type(slots) == "table" and #slots > 1) and 2 or 1,
+    verdict = v, facts = f, link = f.link, compare = (type(slots) == "table" and #slots > 1) and 2 or 1,
     altKey = ns.Verdicts.SendKey(v), equipLoc = f.equipLoc,
   }
 end

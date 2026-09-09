@@ -238,6 +238,11 @@ local function onRowEnter(row)
   row.hover:Show()
   if row.dismissable then row.dismiss:Show() end
   if row.ackable then row.act:Show() end
+  if row.tellable then
+    row.tell.label:SetText(ns.GroupChat.Label())
+    row.tell:SetWidth(row.tell.label:GetStringWidth() + 12)
+    row.tell:Show()
+  end
   if row.link then
     GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
     GameTooltip:SetHyperlink(row.link)
@@ -249,6 +254,7 @@ local function onRowLeave(row)
   row.hover:Hide()
   if row.dismiss and not row.dismiss:IsMouseOver() then row.dismiss:Hide() end
   if row.act and not row.act:IsMouseOver() then row.act:Hide() end
+  if row.tell and not row.tell:IsMouseOver() then row.tell:Hide() end
   GameTooltip:Hide()
 end
 
@@ -318,6 +324,14 @@ local function acquireRow()
     r.act:SetPoint("RIGHT", r.dismiss, "LEFT", -4, 0)
     r.act:Hide()
     r.act:SetScript("OnLeave", function() r.act.label:SetTextColor(unpack(Style.MUTED)); if not r:IsMouseOver() then r.act:Hide(); r.dismiss:Hide(); r.hover:Hide() end end)
+
+    -- "Tell party" on a piece the group could still be traded.
+    r.tell = Style.TextButton(r, "Tell party", Style.SIZE.meta, function()
+      if r.entry then ns.GroupChat.Tell(r.entry.facts, r.entry.verdict) end
+    end)
+    r.tell:SetPoint("RIGHT", r.act, "LEFT", -4, 0)
+    r.tell:Hide()
+    r.tell:SetScript("OnLeave", function() r.tell.label:SetTextColor(unpack(Style.MUTED)); if not r:IsMouseOver() then r.tell:Hide(); r.act:Hide(); r.dismiss:Hide(); r.hover:Hide() end end)
 
     r.siftRow = true
     r:RegisterForClicks("LeftButtonUp")
@@ -400,7 +414,7 @@ local function collect()
 
   for _, e in ipairs(Verdicts.SessionEquip()) do
     local f, v = e.entry.facts, e.entry.verdict
-    table.insert(byKey.now.items, { icon = f.icon, name = f.name, quality = f.quality, link = f.link, gain = ns.Engine.Gain(v),
+    table.insert(byKey.now.items, { icon = f.icon, name = f.name, quality = f.quality, link = f.link, gain = ns.Engine.Gain(v), entry = e.entry,
       reason = v.reason, brief = v.brief, verb = "Equip", kind = "EQUIP", meta = ns.Slots.LABEL[v.details and v.details.self and v.details.self[1] and v.details.self[1].incumbent and v.details.self[1].incumbent.slot or 0] or "" })
   end
 
@@ -419,6 +433,9 @@ local function collect()
     else
       local row = { guid = h.guid, icon = hold.icon, name = hold.name, quality = hold.quality, link = hold.link,
         reason = hold.reason, brief = hold.brief, kind = hold.kind, meta = wakeText(hold), dismissable = true, gain = hold.gain }
+      -- The cached verdict behind the hold, for the Tell button; only
+      -- looked up while the buttons show at all.
+      if ns.GroupChat.Showing() then row.entry = Verdicts.ForBag(h.loc.bag, h.loc.slot) end
       local fake = { kind = hold.kind, sub = hold.sub, ready = hold.ready, noSim = hold.noSim }
       row.verb = ns.Engine.Headline(fake)
       if hold.kind == "SEND" then
@@ -473,7 +490,7 @@ local function collect()
   for _, d in ipairs(Verdicts.SessionDispose()) do
     local f, v = d.entry.facts, d.entry.verdict
     byKey.vendor.total = byKey.vendor.total + (tonumber(f.sellPrice) or 0)
-    table.insert(byKey.vendor.items, { icon = f.icon, name = f.name, quality = f.quality, link = f.link, gain = ns.Engine.Gain(v),
+    table.insert(byKey.vendor.items, { icon = f.icon, name = f.name, quality = f.quality, link = f.link, gain = ns.Engine.Gain(v), entry = d.entry,
       reason = v.reason, brief = v.brief, verb = "Dispose", kind = "DISPOSE", meta = "vendor " .. Style.MoneyText(f.sellPrice) })
   end
   -- One action for the whole vendor list: collapsed past a few rows
@@ -580,8 +597,11 @@ local function layout(groups)
       r.meta:SetText(item.meta or "")
       r.dismiss:Hide()
       r.act:Hide()
+      r.tell:Hide()
       r.dismissable = item.dismissable
       r.ackable = item.ackable
+      r.entry = item.entry
+      r.tellable = item.entry ~= nil and ns.GroupChat.Offers(item.entry.facts)
       local h = math.max(ROW_H, math.ceil(textH) + REASON_TOP + ROW_PAD)
       r:SetHeight(h)
       y = y + h

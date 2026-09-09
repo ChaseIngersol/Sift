@@ -157,6 +157,17 @@ each send on record is found in them.
 cold client start can, and let their load callbacks rebuild the picture.
 `/sift status` then counts the re-read.
 
+### /sift chat
+
+Where group chat stands: whether posting is live or every click is a
+dry run, the channel a post would go to, and who is in the group with
+their classes.
+
+`/sift chat test`: print what each toast row would post to the group,
+in your own chat frame, without posting anything, and write each line
+to the journal. Works outside a group. `/sift toast` fills the toast
+first if it is empty.
+
 ### /sift refresh
 
 Re-run every hold and cached verdict as if gear or spec had just changed.

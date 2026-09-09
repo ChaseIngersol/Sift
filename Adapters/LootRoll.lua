@@ -34,7 +34,7 @@ local function evaluate(rollFrame)
     if ns.Journal then ns.Journal.Roll(st.link, advice.word, line) end
     if ns.LootRollUI then
       ns.LootRollUI.Attach(rollFrame, {
-        word = advice.word, kind = advice.kind, line = line, link = st.link,
+        word = advice.word, kind = advice.kind, line = line, link = st.link, verdict = entry.verdict,
         altKey = ns.Verdicts.SendKey(entry.verdict), equipLoc = entry.facts.equipLoc,
       })
     end

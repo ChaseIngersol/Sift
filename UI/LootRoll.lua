@@ -35,6 +35,14 @@ local function build(rollFrame)
   f.line:SetWordWrap(true)
   f.line:SetMaxLines(3)
 
+  -- "Say why" posts the Need's reason to the group on a click.
+  f.why = Style.TextButton(f, "Say why", Style.SIZE.meta, function()
+    local a = f.advice
+    if a and a.verdict then ns.GroupChat.SayWhy(a.link, a.verdict, a.word) end
+  end)
+  f.why:SetPoint("BOTTOMRIGHT", -4, 1)
+  f.why:Hide()
+
   f:EnableMouse(true)
   f:SetScript("OnEnter", function(self)
     if not self.link then return end
@@ -72,6 +80,12 @@ function LootRollUI.Attach(rollFrame, advice)
   f.link = advice.link
   f.advice = advice
   ns.AltCompare.Tag(f, advice.altKey, advice.equipLoc)
+  local why = ns.GroupChat.Showing() and ns.GroupChat.RollOffers(advice.verdict)
+  f.why:SetShown(why)
+  f:SetHeight(why and (HEIGHT + Style.SIZE.meta + 6) or HEIGHT)
+  f.line:ClearAllPoints()
+  f.line:SetPoint("TOPLEFT", f.word, "BOTTOMLEFT", 0, -2)
+  if why then f.line:SetPoint("BOTTOMRIGHT", f.why, "TOPRIGHT", -4, 0) else f.line:SetPoint("BOTTOMRIGHT", -8, 4) end
   place(f, rollFrame)
   f:Show()
 end
@@ -82,6 +96,11 @@ function LootRollUI.Detach(rollFrame)
     f.link, f.advice = nil, nil
     f:Hide()
   end
+end
+
+-- The strip frame itself, for tests.
+function LootRollUI.Strip(rollFrame)
+  return strips[rollFrame]
 end
 
 -- The advice on a roll frame's strip, or nil when none is up.

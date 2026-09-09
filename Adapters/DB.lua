@@ -20,6 +20,7 @@ local DEFAULTS = {
     vault = true,       -- rank the Great Vault's items while the vault is open
     lootRoll = true,    -- roll advice beside Need, Greed, Pass windows
     bankReminder = true, -- toast rows at the bank: deposits for alts, pickups for me
+    groupChat = true,   -- Tell party / Say why buttons in a group (see Adapters/GroupChat.lua)
     catalystMinTrack = "Champion", -- lowest upgrade track worth a catalyst charge ("" for any)
     guideSeen = false,  -- the guide opened once on first login
     toastRows = 3,      -- rows per toast page
