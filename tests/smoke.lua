@@ -353,6 +353,7 @@ local function memberOf(unit)
   if i then return group.members[tonumber(i) - 1] end
   return nil
 end
+function UnitIsPlayer(unit) local m = unit and memberOf(unit); return not (m and m.npc) end
 local function installUnits()
   UnitName = function(unit)
     local m = unit and memberOf(unit)
@@ -1575,6 +1576,28 @@ do
   prow.tell.__scripts.OnClick(prow.tell)
   check(printed[#printed]:find("would post to PARTY: " .. want, 1, true), "the panel button posts the same line")
   ns.Panel.Toggle()
+
+  -- A send is a keep for an alt, said so, with the group given first call.
+  local sendText = G.Text(rowTheirs.entry.t.facts, { kind = "SEND", reason = "Send to Garumis: x", brief = { gain = "+9%", who = "Garumis" } })
+  check(sendText == "Sift: " .. link(1007) .. " is for an alt of mine, unless someone here needs it. Plate: Marcus?", "a send says the alt has it unless someone needs it: " .. sendText)
+
+  -- A delve companion is a party unit and not a player: no group to
+  -- post to, no buttons, and the test falls back to PARTY.
+  group.kind = "instance"
+  group.members = { { name = "Valeera Sanguinar", className = "Rogue", classFile = "ROGUE", classID = 4, npc = true } }
+  check(G.Channel() == nil and not G.Showing() and #G.Members() == 0, "a delve with a companion is not a group")
+  before = #printed
+  slash("chat")
+  check(printed[before + 2]:find("no other player in it", 1, true), "/sift chat says why: " .. tostring(printed[before + 2]))
+  before = #printed
+  slash("chat test")
+  check(printed[before + 1]:find("would post to PARTY: ", 1, true), "chat test falls back to PARTY there")
+  group.members = {
+    { name = "Marcus", className = "Paladin", classFile = "PALADIN", classID = 2 },
+    { name = "Elena", className = "Mage", classFile = "MAGE", classID = 8 },
+    { name = "Bob", className = "Rogue", classFile = "ROGUE", classID = 4 },
+  }
+  group.kind = "party"
 
   -- Raid and instance groups pick their channel and label.
   group.kind = "raid"

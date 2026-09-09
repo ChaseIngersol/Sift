@@ -32,12 +32,23 @@ function GroupChat.Showing()
   return GroupChat.Channel() ~= nil
 end
 
--- Where a post goes, or nil when not in a group.
-function GroupChat.Channel()
+-- The channel the game would use, before asking who is in the group.
+local function rawChannel()
   if IsInGroup and LE_PARTY_CATEGORY_INSTANCE and IsInGroup(LE_PARTY_CATEGORY_INSTANCE) then return "INSTANCE_CHAT" end
   if IsInRaid and IsInRaid() then return "RAID" end
   if IsInGroup and IsInGroup() then return "PARTY" end
   return nil
+end
+
+-- Where a post goes, or nil when not in a group. A delve with a
+-- companion is a group to the game and not to anyone: the companion is
+-- a party unit but not a player, so a group with no other player in it
+-- has nowhere to post.
+function GroupChat.Channel()
+  local channel = rawChannel()
+  if not channel then return nil end
+  if #GroupChat.Members() == 0 then return nil end
+  return channel
 end
 
 -- The button's word for the channel.
@@ -56,7 +67,8 @@ function GroupChat.Members()
   local last = raid and n or (n - 1)
   for i = 1, last do
     local unit = (raid and "raid" or "party") .. i
-    if not (raid and UnitIsUnit and UnitIsUnit(unit, "player")) then
+    local player = (not UnitIsPlayer) or UnitIsPlayer(unit)
+    if player and not (raid and UnitIsUnit and UnitIsUnit(unit, "player")) then
       local name = UnitName(unit)
       local _, classFile, classID = UnitClass(unit)
       if name and name ~= "" and name ~= UNKNOWNOBJECT and classID then
@@ -178,6 +190,11 @@ function GroupChat.Text(f, v)
   local names, kind = GroupChat.Wearers(f)
   local wear = table.concat(names, ", ")
   local ask = (kind ~= "" and (kind .. ": ") or "") .. listNames(names) .. "?"
+  -- A send is a keep: the piece has an alt waiting. Say so, and still
+  -- let the group have first call.
+  if v.kind == K.SEND then
+    return string.format("Sift: %s is for an alt of mine, unless someone here needs it. %s", link, ask), word, brief, wear
+  end
   return string.format("Sift: %s not for me. %s", link, ask), word, brief, wear
 end
 
@@ -265,7 +282,13 @@ function GroupChat.Status()
   local lines = {}
   lines[1] = GroupChat.LIVE and "group chat is live: a click posts to the group, unless debug mode is on"
     or "group chat is not live yet: every click is a dry run printed here and written to the journal"
-  lines[2] = channel and ("in a group: posts would go to " .. channel) or "not in a group"
+  if channel then
+    lines[2] = "in a group: posts would go to " .. channel
+  elseif rawChannel() then
+    lines[2] = "in a group with no other player in it, such as a delve with a companion: nothing to post to"
+  else
+    lines[2] = "not in a group"
+  end
   if not GroupChat.Enabled() then lines[#lines + 1] = "the setting is off: no buttons show" end
   local members = GroupChat.Members()
   if #members > 0 then
