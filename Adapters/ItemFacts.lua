@@ -162,6 +162,15 @@ function Facts.Build(link, loc, tooltipFn)
     local ok, data = pcall(tooltipFn)
     if ok then Facts.ReadTooltip(f, data) end
   end
+  -- A link with no location (a vault offer, a roll window) cannot be
+  -- asked about the catalyst. Infer it: a non-tier piece in a tier slot
+  -- on a current-season track converts in practice. Marked as inferred.
+  if f.catalystEligible == nil and f.track and not f.isTier then
+    local slots = ns.Slots.BY_EQUIPLOC[f.equipLoc]
+    if slots and ns.Season.tierSlots[slots[1]] then
+      f.catalystEligible, f.catalystAssumed = true, true
+    end
+  end
   f.sendable = Facts.IsSendable(f)
   return f
 end

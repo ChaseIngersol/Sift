@@ -6,6 +6,10 @@
   or bank something. It starts at the top only when you open it.
 - The panel's default width is narrower, to fit the shorter row text.
   Double-click the corner grip to return to it.
+- A vault offer or a roll that would replace a worn tier piece now says
+  to catalyze it and keep the set, instead of calling it an off-piece.
+  The game cannot be asked whether a bare link converts, so a non-tier
+  piece in a tier slot on a current track is taken as convertible.
 - The Great Vault ranking now sits on the vault's own cards: Take with
   the gain and a jade edge on the pick, Good, Sim it or Pass on the rest,
   and one sentence under the window instead of a line per item. The

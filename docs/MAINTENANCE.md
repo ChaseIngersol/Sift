@@ -84,6 +84,7 @@ branch `live`) when any of these break.
 | Settings page | `UI/Options.lua` | `Settings.RegisterProxySetting`, `CreateDropdown`, `CreateSettingsButtonInitializer`, `SettingsPanel:GetLayout`. |
 | Edit Mode | `UI/EditMode.lua`, `UI/EditModePanel.lua` | `EditModeManagerFrame` and the `NineSliceUtil` highlight kits. |
 | Dialogs | `UI/Guide.lua` | Showing a full-area UI panel runs `CloseAllWindows`, which hides every frame in `UISpecialFrames`; the guide steps aside for settings on purpose. |
+| Catalyst | `Adapters/ItemFacts.lua` | `C_Item.IsItemConvertibleAndValidForPlayer` for anything with a location. A bare link (vault offer, roll window) is inferred: non-tier piece, tier slot, current track. |
 | Spec facts | `Adapters/SpecScan.lua`, `Core/Specs.lua` | The client's spec records (primary stat, role, name) for every class. |
 
 ## Invariants

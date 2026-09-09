@@ -214,6 +214,10 @@ local ITEMS = {
   [1006] = { name = "Hero Bracers", quality = 4, ilvl = 305, reqLevel = 80, equipLoc = "INVTYPE_WRIST", icon = 16, sell = 5000, classID = 4, subclassID = 4, bind = 1,
     stats = { ITEM_MOD_AGI_STR_INT_SHORT = 600, ITEM_MOD_STAMINA_SHORT = 900, ITEM_MOD_CRIT_RATING_SHORT = 200, ITEM_MOD_HASTE_RATING_SHORT = 290 },
     tooltip = { { type = 20, leftText = "Soulbound" }, { type = 32, leftText = "Upgrade Level: Hero 1/6", currentLevel = 1, maxLevel = 6, trackStringID = 974 } } },
+  -- A non-tier chest on a track: what a vault offer or a roll looks like.
+  [1008] = { name = "Guise of Tests", quality = 4, ilvl = 318, reqLevel = 80, equipLoc = "INVTYPE_CHEST", icon = 18, sell = 300, classID = 4, subclassID = 4, bind = 1,
+    stats = { ITEM_MOD_AGI_STR_INT_SHORT = 1100, ITEM_MOD_STAMINA_SHORT = 1600, ITEM_MOD_CRIT_RATING_SHORT = 420, ITEM_MOD_HASTE_RATING_SHORT = 420 },
+    tooltip = { { type = 20, leftText = "Soulbound" }, { type = 32, leftText = "Upgrade Level: Hero 1/6", currentLevel = 1, maxLevel = 6, trackStringID = 974 } } },
   -- What the alt on file wears; its link is what the alt comparison shows.
   [1007] = { name = "Old Bracers", quality = 3, ilvl = 270, reqLevel = 70, equipLoc = "INVTYPE_WRIST", icon = 17, sell = 50, classID = 4, subclassID = 4, bind = 1,
     stats = { ITEM_MOD_AGI_STR_INT_SHORT = 300, ITEM_MOD_STAMINA_SHORT = 500, ITEM_MOD_CRIT_RATING_SHORT = 100, ITEM_MOD_HASTE_RATING_SHORT = 100 },
@@ -1211,6 +1215,22 @@ do
   ns.db.prefs.chat = chatWas
   bags[0][14] = nil
   if not wasShown then ns.Panel.Toggle() end
+end
+
+-- Catalyst eligibility for a link with no location (a vault offer, a roll):
+-- inferred for a non-tier piece in a tier slot on a track, marked as such.
+-- A bag item keeps the game's own answer.
+do
+  local guise = ns.ItemFacts.FromLink(link(1008))
+  check(guise and guise.catalystEligible == true and guise.catalystAssumed == true, "a linked non-tier chest on a track is taken as catalyst-eligible, marked inferred")
+  local bracers = ns.ItemFacts.FromLink(link(1006))
+  check(bracers and bracers.catalystEligible == nil and not bracers.catalystAssumed, "a linked wrist piece is not")
+  local tier = ns.ItemFacts.FromLink(link(1003))
+  check(tier and tier.catalystEligible == nil, "a linked tier piece is not")
+  putInBag(2, 20, 1008)
+  local bagged = ns.ItemFacts.FromBag(2, 20)
+  check(bagged and bagged.catalystEligible == false and not bagged.catalystAssumed, "the same piece in a bag keeps the game's answer")
+  bags[2][20] = nil
 end
 
 -- Great Vault: the window loads on demand, Sift hooks it, ranks the offers.
