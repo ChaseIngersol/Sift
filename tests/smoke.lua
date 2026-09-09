@@ -313,7 +313,14 @@ C_WeeklyRewards = {
   GetExampleRewardItemHyperlinks = function(id) return vaultLinks["example" .. id] end,
 }
 function GetDifficultyInfo(id) return id == 15 and "Heroic" or "Normal" end
-C_ChallengeMode = { IsChallengeModeActive = function() return false end }
+local instance = { name = "Khaz Algar", kind = "none", difficulty = "", id = 2552, zone = "Dornogal" }
+local keystone = nil
+C_ChallengeMode = {
+  IsChallengeModeActive = function() return keystone ~= nil end,
+  GetActiveKeystoneInfo = function() return keystone, {}, false end,
+}
+function GetInstanceInfo() return instance.name, instance.kind, 1, instance.difficulty, 5, 0, false, instance.id, 5, nil end
+function GetZoneText() return instance.zone end
 local CLASS_SPECS = {
   [1] = { { id = 71, name = "Arms", role = "DAMAGER", primaryStat = 1 }, { id = 72, name = "Fury", role = "DAMAGER", primaryStat = 1 }, { id = 73, name = "Protection", role = "TANK", primaryStat = 1 } },
   [12] = { { id = 577, name = "Havoc", role = "DAMAGER", primaryStat = 2 }, { id = 581, name = "Vengeance", role = "TANK", primaryStat = 2 }, { id = 1480, name = "Devourer", role = "DAMAGER", primaryStat = 4 } },
@@ -488,6 +495,14 @@ check(hold and hold.ready == true, "hold is ready with 45 crests")
 local sawChat = false
 for _, p in ipairs(printed) do if p:find("Bracers of the Test", 1, true) and p:find("Upgrade", 1, true) then sawChat = true end end
 check(sawChat, "chat line announced the verdict")
+do -- The pickup is in the journal, placed and worded.
+  local j = ns.Journal.Entries()
+  local e = j[#j]
+  check(e and e.kind == "drop" and e.link == link(1001) and e.name == "Bracers of the Test", "the pickup is the journal's last entry (" .. tostring(e and e.kind) .. ")")
+  check(e and e.word == "Upgrade" and e.brief and e.brief:find("Worn Bracers", 1, true), "the entry carries the word and the brief (" .. tostring(e and e.word) .. ", " .. tostring(e and e.brief) .. ")")
+  check(e and e.where == "Dornogal" and e.run == 1 and e.player == "Tester-Realm", "the entry says where and which run (" .. tostring(e and e.where) .. ", " .. tostring(e and e.run) .. ")")
+  check(#j == 1, "junk never makes an entry")
+end
 check(ns.db.holds[looted.guid] and (ns.db.holds[looted.guid].notes or {})[1] ~= nil, "verdict carries a note (alt or ceiling)")
 
 -- Structured upgrade fields win over the text, and unknown text resolves through the learned id.
@@ -660,6 +675,8 @@ local report = ns.CopyBox.Text() or ""
 check(_G.SiftLootAdvisorCopy.__shown and report:find("Sift 1.0.0-smoke, game 12.1.0 (69587)", 1, true), "/sift feedback opens the report in the copy box with the versions")
 check(report:find(ns.Feedback.URL, 1, true) and report:find("settings: chat", 1, true) and report:find("Tester, ", 1, true), "the report carries where to paste it, the settings and the status lines")
 check(report:find("catalyst from Champion", 1, true), "the report names the catalyst minimum")
+check(report:find("last run:\nJournal: Dornogal, ", 1, true) and report:find("you looted Bracers of the Test: Upgrade, ", 1, true) and not report:find("|Hitem", 1, true),
+  "the report carries the last run with item names instead of links")
 _G.SiftLootAdvisorCopy.__shown = false
 local trackOptions = settingsDropdowns[1] or {}
 check(#trackOptions == 6 and trackOptions[1].label == "Any track" and trackOptions[4].value == "Champion", "the catalyst minimum is a dropdown of every track plus any")
@@ -684,7 +701,7 @@ do -- The command reference: one row per command, developer rows only with debug
     end
   end
   check(#missing == 0, "every command has a row on the settings page (missing: " .. table.concat(missing, ", ") .. ")")
-  check(user == 12 and dev == 4, "twelve player rows and four developer rows (" .. user .. "/" .. dev .. ")")
+  check(user == 13 and dev == 4, "thirteen player rows and four developer rows (" .. user .. "/" .. dev .. ")")
   -- The Defaults button restores what ships, not what was set at login
   -- (debug was on in this world from the start).
   check(settingsDefaults.debug == false and settingsDefaults.toast == true and settingsDefaults.sound == false and settingsDefaults.parked == false,
@@ -1369,6 +1386,60 @@ check(ns.LootRollUI.Current(GroupLootFrame1) == nil, "roll advice off when the o
 hideFrame(GroupLootFrame1)
 ns.db.prefs.lootRoll = true
 check(ns.db.watermarks["Tester-Realm"].wrist == 305, "a roll does not raise the slot watermark")
+
+-- The journal: rolls are on record beside the pickups, the command reads
+-- the last run back with links, a keystone start or an instance change
+-- opens a new run, dry-run posts read as such, and the file stays small.
+do
+  local j = ns.Journal.Entries()
+  local n = #j
+  local rolls = {}
+  for _, e in ipairs(j) do if e.kind == "roll" then rolls[#rolls + 1] = e end end
+  check(#rolls == 2 and rolls[1].link == link(1006) and rolls[1].word == "Need" and rolls[2].link == link(1004) and rolls[2].word == "Pass",
+    "both advised rolls are in the journal, not the junk or the unresolved one (" .. #rolls .. ")")
+  check(rolls[1].brief and rolls[1].brief ~= "" and not rolls[1].brief:find("^Hold%."), "a roll entry keeps the strip's line")
+  local before = #printed
+  slash("journal")
+  local out = {}
+  for i = before + 1, #printed do out[#out + 1] = printed[i] end
+  check(out[1] and out[1]:find("Journal: Dornogal, ", 1, true) and out[1]:find(#j .. " entries", 1, true), "/sift journal heads the run with where and how much: " .. tostring(out[1]))
+  local sawLink, sawRoll = false, false
+  for _, l in ipairs(out) do
+    if l:find("you looted " .. link(1001) .. ": Upgrade, ", 1, true) then sawLink = true end
+    if l:find("roll on " .. link(1004) .. ": Pass", 1, true) then sawRoll = true end
+  end
+  check(sawLink and sawRoll and #out == #j + 1, "every entry of the run is a line with the link kept clickable")
+
+  -- A keystone starts in a dungeon: new run, new place.
+  instance.name, instance.kind, instance.difficulty, instance.id = "Ara-Kara, City of Echoes", "party", "Mythic Keystone", 2660
+  fire("PLAYER_ENTERING_WORLD")
+  keystone = 12
+  fire("CHALLENGE_MODE_START")
+  local e = ns.Journal.Add("dryrun", { link = link(1006), channel = "PARTY", text = "Sift: " .. link(1006) .. " +3.4% for me. Taking it." })
+  check(e.run == 3 and e.where == "Ara-Kara, City of Echoes +12", "entering the dungeon and starting the key each open a run; the entry names the key (" .. tostring(e.run) .. ", " .. tostring(e.where) .. ")")
+  local last = ns.Journal.LastRun()
+  check(#last == 1 and last[1] == e, "the last run holds only what happened since the key started")
+  before = #printed
+  slash("journal")
+  check(printed[before + 1]:find("Journal: Ara-Kara, City of Echoes +12, ", 1, true) and printed[before + 2]:find("would have posted to PARTY: Sift: ", 1, true) and #printed == before + 2,
+    "the dry run reads back as what would have been posted: " .. tostring(printed[before + 2]))
+  before = #printed
+  slash("journal all")
+  check(#printed == before + n + 3, "/sift journal all prints every run with a heading each")
+
+  -- Leaving, then a later drop back in town: a run of its own, and the
+  -- last run with anything in it is what the command shows.
+  keystone = nil
+  instance.name, instance.kind, instance.difficulty, instance.id = "Khaz Algar", "none", "", 2552
+  fire("PLAYER_ENTERING_WORLD")
+  check(#ns.Journal.LastRun() == 1 and ns.Journal.LastRun()[1] == e, "an empty run after the key does not hide it")
+  for i = 1, 320 do ns.Journal.Add("drop", { link = link(1001), word = "Equip", brief = "" }) end
+  check(#ns.Journal.Entries() == 300 and ns.Journal.Entries()[1].run == 4, "the journal keeps the last three hundred entries")
+  ns.db.journal.entries = {}
+  before = #printed
+  slash("journal")
+  check(#printed == before + 1 and printed[before + 1]:find("nothing on record yet", 1, true), "an empty journal says so")
+end
 
 -- Toast stack: rows arrive, a page shows a few, the wheel scrolls the
 -- rest, the oldest page leaves together on its clock, hovering pauses

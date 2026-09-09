@@ -43,6 +43,11 @@ function Feedback.Report()
   add(string.format("Sift %s, game %s (%s), %s", version(), tostring(gameVersion), tostring(build), when()))
   for _, l in ipairs(ns.Status.Lines()) do add(l) end
   add(prefsLine())
+  if ns.Journal and #ns.Journal.LastRun() > 0 then
+    add("last run:")
+    local run = ns.Journal.Lines(false, true)
+    for i = math.max(1, #run - 20), #run do add(run[i]) end
+  end
   local log = ns.db.log or {}
   if #log > 0 then
     add("recent log:")

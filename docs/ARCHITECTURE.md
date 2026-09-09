@@ -32,6 +32,7 @@ Sift/
     Character.lua      self and alt snapshots, weight import, staleness
     Resources.lua      crest and catalyst currency discovery
     Verdicts.lua       verdict cache, hold records, send states, bag scans
+    Journal.lua        the loot journal: pickups, rolls and group posts by run
     Triggers.lua       events, safe moments, wake registration, announcements
     Bank.lua           the warband bank: deposits, pickups, reminders
     Vault.lua          the Great Vault window
@@ -106,7 +107,8 @@ Raidbots does not sim healing (`v.flags.noSim`).
 
 `SiftLootAdvisorDB` (account): preferences, character snapshots keyed by
 name-realm, hold records keyed by item GUID, slot watermarks, discovered
-currency ids, the last command's output, the log. `SiftLootAdvisorCharDB`
+currency ids, the last command's output, the log, the loot journal.
+`SiftLootAdvisorCharDB`
 (character): imported weights per spec, the parked flag. Defaults and
 shapes live in `Adapters/DB.lua`.
 

@@ -20,6 +20,7 @@ local function usage()
   ns.Print("  /sift vault      rank what the Great Vault is offering (open the vault first)")
   ns.Print("  /sift vault preview   try the picker on example items for the slots you have earned")
   ns.Print("  /sift status     show what Sift knows right now")
+  ns.Print("  /sift journal    what happened around each drop in your last run (all: every run on file)")
   ns.Print("  /sift feedback   build a report you can paste to the author")
   ns.Print("  /sift copy       reopen the last command's output in a box you can copy from")
   ns.Print("  Add copy to any command (/sift status copy) to open that box right away.")
@@ -119,6 +120,11 @@ local handlers = {
     ns.Print("set " .. key .. " to currency " .. id)
   end,
   status = status,
+  journal = function(rest)
+    for _, line in ipairs(ns.Journal.Lines(rest == "all")) do
+      ns.Print(line)
+    end
+  end,
   vault = function(rest)
     local lines = (rest == "preview") and ns.Vault.Preview() or ns.Vault.Describe()
     for _, line in ipairs(lines) do

@@ -29,11 +29,15 @@ local function evaluate(rollFrame)
   local entry, why = ns.Verdicts.ForLink(st.link)
   if not entry then return why ~= "uncached" end
   local advice = ns.Roll.Advice(entry.verdict)
-  if advice and ns.LootRollUI then
-    ns.LootRollUI.Attach(rollFrame, {
-      word = advice.word, kind = advice.kind, line = ns.Roll.Line(entry.verdict), link = st.link,
-      altKey = ns.Verdicts.SendKey(entry.verdict), equipLoc = entry.facts.equipLoc,
-    })
+  if advice then
+    local line = ns.Roll.Line(entry.verdict)
+    if ns.Journal then ns.Journal.Roll(st.link, advice.word, line) end
+    if ns.LootRollUI then
+      ns.LootRollUI.Attach(rollFrame, {
+        word = advice.word, kind = advice.kind, line = line, link = st.link,
+        altKey = ns.Verdicts.SendKey(entry.verdict), equipLoc = entry.facts.equipLoc,
+      })
+    end
   end
   return true
 end

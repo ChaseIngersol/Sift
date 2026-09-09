@@ -131,6 +131,10 @@ would be worth wearing then, it is a Hold that wakes when you level.
 - **Great Vault.** A word on each card of the vault window: Take with
   the gain and a jade edge on the pick, Good, Sim it or Pass, and one
   sentence under the window. The full reason is in the card's tooltip.
+- **The journal.** `/sift journal` reads back your last run: every
+  pickup with its verdict, every roll Sift advised on, every line it
+  posted to the group. Things happen fast at the end of a keystone;
+  this is for after the group is gone.
 - **The guide.** Four pages at the first login, and `/sift guide` after.
 
 ## Settings

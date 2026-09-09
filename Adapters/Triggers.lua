@@ -124,6 +124,7 @@ local function evaluateSlots(list, prefixWord)
     local entry, why = ns.Verdicts.ForBag(s.bag, s.slot, true)
     if entry then
       ns.Verdicts.SyncHold(entry.facts, entry.verdict)
+      if ns.Journal then ns.Journal.Drop(entry) end
       announce(entry, prefixWord)
       if entry.verdict.kind == ns.Engine.KIND.HOLD then newHold = true end
     elseif why == "uncached" and s.guid then
@@ -285,6 +286,7 @@ end
 
 local initialized = false
 local function onEnterWorld()
+  if ns.Journal then ns.Journal.Sync() end
   if initialized then flush() return end
   initialized = true
   ns.SpecScan.Load()
@@ -324,6 +326,7 @@ local handlers = {
   PLAYER_INTERACTION_MANAGER_FRAME_SHOW = onInteraction,
   PLAYER_REGEN_ENABLED = flush,
   CHALLENGE_MODE_COMPLETED = flush,
+  CHALLENGE_MODE_START = function() if ns.Journal then ns.Journal.NewRun() end end,
   ZONE_CHANGED_NEW_AREA = flush,
 }
 
@@ -334,7 +337,7 @@ end)
 
 for _, e in ipairs({ "ADDON_LOADED", "PLAYER_ENTERING_WORLD", "PLAYER_LOGOUT", "BAG_UPDATE_DELAYED",
   "PLAYER_EQUIPMENT_CHANGED", "PLAYER_SPECIALIZATION_CHANGED", "PLAYER_REGEN_ENABLED",
-  "CHALLENGE_MODE_COMPLETED", "ZONE_CHANGED_NEW_AREA" }) do
+  "CHALLENGE_MODE_COMPLETED", "CHALLENGE_MODE_START", "ZONE_CHANGED_NEW_AREA" }) do
   frame:RegisterEvent(e)
 end
 

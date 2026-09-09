@@ -71,6 +71,7 @@ after each change.
 /sift vault                    rank what the Great Vault is offering
 /sift vault preview            try the picker on example items before the reset
 /sift status                   what Sift knows right now
+/sift journal                  what happened around each drop in your last run
 /sift feedback                 a report to paste along with what you saw
 /sift copy                     the last command's output in a box you can copy from
                                (or add copy to any command: /sift probe copy)
@@ -88,8 +89,8 @@ the panel header opens Settings, the Guide and the Weights sheet.
 
 ## Feedback
 
-`/sift feedback` builds a report (versions, status, settings, the recent
-log) in a box you can copy, with the address to paste it at on the first
+`/sift feedback` builds a report (versions, status, settings, your last
+run from the journal, the recent log) in a box you can copy, with the address to paste it at on the first
 line. No account is needed beyond what that address asks for. Add what
 happened and what you expected instead; a screenshot of the tooltip or
 the panel row helps most.

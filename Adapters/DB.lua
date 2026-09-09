@@ -32,6 +32,7 @@ local DEFAULTS = {
   holds = {},      -- guid -> { owner, link, name, icon, kind, sub, reason, wake, ready, ts }
   season = { currency = {}, manual = {}, candidates = {}, trackStrings = {} },
   log = {},
+  journal = { run = 0, entries = {} }, -- the loot journal (see Adapters/Journal.lua)
   probe = {},
   output = {},     -- last slash command's output, readable after a reload
 }

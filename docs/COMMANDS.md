@@ -81,6 +81,20 @@ data could not find, and any name that matches more than one currency
 (with the id in use, so `/sift currency` can correct it); the spec scan
 and growth calibration state; whether the character is parked.
 
+### /sift journal
+
+What happened around each drop in your last run, from the loot journal
+Sift keeps in its saved variables: every pickup with the word and the
+brief it got, every roll window with the word Sift put beside it, and
+every line Sift posted to the group or, in a dry run, would have posted.
+A run is everything since the instance last changed or a keystone
+started; the command shows the most recent run that has anything in it,
+headed by where and when it was, so a fast keystone ending can be read
+back after the group is gone. Item links stay clickable in chat.
+
+`/sift journal all`: every run on file, oldest first. The journal keeps
+the last three hundred entries.
+
 ### /sift vault
 
 Rank what the Great Vault is offering. The vault window must be open; the

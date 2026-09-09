@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.5 - unreleased
+
+- A loot journal. Sift now writes down every pickup it judges, with the
+  word and the brief, and every roll window it put a word beside, grouped
+  by run: a run is everything since the instance last changed or a
+  keystone started. `/sift journal` reads back the last run in chat with
+  the item links still clickable, `/sift journal all` every run on file,
+  and the feedback report carries the last run. Things happen fast at
+  the end of a keystone; this is for after the group is gone.
+
 ## 1.0.4 - 2026-09-08
 
 - The Great Vault ranking now sits on the vault's own cards: Take with
