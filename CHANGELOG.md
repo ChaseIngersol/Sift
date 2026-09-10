@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.5 - unreleased
+## 1.0.6 - unreleased
 
 - A loot journal. Sift now writes down every pickup it judges, with the
   word and the brief, and every roll window it put a word beside, grouped
@@ -9,6 +9,14 @@
   the item links still clickable, `/sift journal all` every run on file,
   and the feedback report carries the last run. Things happen fast at
   the end of a keystone; this is for after the group is gone.
+
+## 1.0.5 - 2026-09-10
+
+- Hovering a send row no longer throws a Lua error. The "Equipped on"
+  panes beside the tooltip, which show what the alt wears, measured
+  their header to size it, and the game now hands that measurement
+  back as a secret value inside a tooltip. The panes size themselves
+  without measuring anything.
 
 ## 1.0.4 - 2026-09-08
 
