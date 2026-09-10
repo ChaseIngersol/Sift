@@ -190,9 +190,9 @@ function GroupLoot.Text(player, f, v)
   local brief = ns.Engine.BriefLine(v) or v.reason
   if b and b.gain then
     local when = ns.GroupChat.PlainWhen(b)
-    return string.format("Sift: %s, %s would be %s for me%s, if you do not need it", player, link, b.gain, when and (" " .. when) or ""), word, brief
+    return string.format("Sift: %s, need %s? Would be %s for me%s, if you do not need it.", player, link, b.gain, when and (" " .. when) or ""), word, brief
   end
-  return string.format("Sift: %s, %s would be an upgrade for me, if you do not need it", player, link), word, brief
+  return string.format("Sift: %s, need %s? Would be an upgrade for me, if you do not need it.", player, link), word, brief
 end
 
 -- Post the ask, or dry-run it.

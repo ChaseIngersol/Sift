@@ -192,7 +192,7 @@ function GroupChat.Text(f, v)
   if v.kind == K.EQUIP or v.kind == K.HOLD then
     local text
     if v.kind == K.HOLD and v.sub == "sim" then
-      text = string.format("Sift: %s is close to what I have, I will sim it. Taking it.", link)
+      text = string.format("Sift: %s is close to what I have, I will sim it.", link)
     elseif v.kind == K.HOLD and v.sub == "offspec" then
       text = string.format("Sift: %s for my offspec. Taking it.", link)
     elseif b and b.gain then
@@ -203,15 +203,16 @@ function GroupChat.Text(f, v)
     end
     return text, word, brief, nil
   end
-  local names, kind = GroupChat.Wearers(f)
+  -- The way a player asks: "Anyone need [item]? Marcus or Elena?",
+  -- naming who could wear it, or nobody when nobody fits.
+  local names = GroupChat.Wearers(f)
   local wear = table.concat(names, ", ")
-  local ask = (kind ~= "" and (kind .. ": ") or "") .. listNames(names) .. "?"
-  -- A send is a keep: the piece has an alt waiting. Say so, and still
-  -- let the group have first call.
-  if v.kind == K.SEND then
-    return string.format("Sift: %s is for an alt of mine, unless someone here needs it. %s", link, ask), word, brief, wear
-  end
-  return string.format("Sift: %s not for me. %s", link, ask), word, brief, wear
+  local ask = string.format("Sift: Anyone need %s?", link)
+  if #names > 0 then ask = ask .. " " .. listNames(names) .. "?" end
+  -- A send is a keep: the piece has an alt waiting. The group still
+  -- has first call.
+  if v.kind == K.SEND then ask = ask .. " Otherwise it goes to my alt." end
+  return ask, word, brief, wear
 end
 
 -- The line behind "Say why" on a roll: what the Need is for.

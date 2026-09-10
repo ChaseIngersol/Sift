@@ -1574,7 +1574,7 @@ do
 
   before = #printed
   rowTheirs.tell.__scripts.OnClick(rowTheirs.tell)
-  local ask = "Sift: " .. link(1007) .. " not for me. Plate: Marcus?"
+  local ask = "Sift: Anyone need " .. link(1007) .. "? Marcus?"
   check(printed[#printed]:find("would post to PARTY: " .. ask, 1, true), "a piece not for me asks the one who could wear it: " .. tostring(printed[#printed]))
   je = ns.Journal.Entries()[#ns.Journal.Entries()]
   check(je.wear == "Marcus" and je.word == "Dispose", "the journal keeps who could wear it")
@@ -1585,15 +1585,15 @@ do
   local names, kind = G.Wearers({ classID = 4, subclassID = 0, equipLoc = "INVTYPE_TRINKET", stats = { INTELLECT = 500 } })
   check(#names == 2 and names[1] == "Marcus" and names[2] == "Elena" and kind == "A trinket, intellect", "a trinket with a fixed stat is described by stat and fits by spec (" .. tostring(kind) .. ", " .. #names .. ")")
   local text = G.Text({ link = link(1004), classID = 4, subclassID = 0, equipLoc = "INVTYPE_TRINKET", stats = { INTELLECT = 500 } }, { kind = "DISPOSE", reason = "x" })
-  check(text == "Sift: " .. link(1004) .. " not for me. A trinket, intellect: Marcus or Elena?", "two fits are asked by name: " .. text)
+  check(text == "Sift: Anyone need " .. link(1004) .. "? Marcus or Elena?", "two fits are asked by name: " .. text)
   local polearm = { link = link(1004), classID = 2, subclassID = ns.Data.WEAPON.POLEARM, equipLoc = "INVTYPE_2HWEAPON", stats = { AGILITY = 500 } }
   names, kind = G.Wearers(polearm)
   check(#names == 0 and kind == "Polearms, agility", "an agility polearm fits none of them (" .. tostring(kind) .. ", " .. #names .. ")")
-  check(G.Text(polearm, { kind = "DISPOSE", reason = "x" }) == "Sift: " .. link(1004) .. " not for me. Polearms, agility: anyone?", "with nobody fitting it asks anyone")
+  check(G.Text(polearm, { kind = "DISPOSE", reason = "x" }) == "Sift: Anyone need " .. link(1004) .. "?", "with nobody fitting it asks with no names")
   local many = { name = "Ann", className = "Mage", classFile = "MAGE", classID = 8 }
   for _ = 1, 4 do group.members[#group.members + 1] = many end
   names = G.Wearers({ classID = 4, subclassID = 1, equipLoc = "INVTYPE_CHEST", stats = {}, flex = { INTELLECT = true } })
-  check(#names == 5 and G.Text({ link = "[x]", classID = 4, subclassID = 1, equipLoc = "INVTYPE_CHEST", stats = {}, flex = { INTELLECT = true } }, { kind = "DISPOSE" }) == "Sift: [x] not for me. Cloth: Elena, Ann, Ann or 2 more?",
+  check(#names == 5 and G.Text({ link = "[x]", classID = 4, subclassID = 1, equipLoc = "INVTYPE_CHEST", stats = {}, flex = { INTELLECT = true } }, { kind = "DISPOSE" }) == "Sift: Anyone need [x]? Elena, Ann, Ann or 2 more?",
     "past three names the ask counts the rest, to stay under the chat limit")
   for _ = 1, 4 do table.remove(group.members) end
 
@@ -1633,7 +1633,7 @@ do
   local freeText = G.Text(rowMine.entry.t.facts, { kind = "HOLD", sub = "upgrade", brief = { gain = "+1.5%", when = "after 5 upgrades, free" } })
   check(freeText == "Sift: " .. link(1006) .. " +1.5% for me after 5 upgrades. Taking it.", "a free upgrade's cost stays out of the line: " .. freeText)
   local sendText = G.Text(rowTheirs.entry.t.facts, { kind = "SEND", reason = "Send to Garumis: x", brief = { gain = "+9%", who = "Garumis" } })
-  check(sendText == "Sift: " .. link(1007) .. " is for an alt of mine, unless someone here needs it. Plate: Marcus?", "a send says the alt has it unless someone needs it: " .. sendText)
+  check(sendText == "Sift: Anyone need " .. link(1007) .. "? Marcus? Otherwise it goes to my alt.", "a send asks the same way and says the alt has it otherwise: " .. sendText)
 
   -- A delve companion is a party unit and not a player: no group to
   -- post to, no buttons, and the test falls back to PARTY.
@@ -1679,7 +1679,7 @@ do
   check(#ns.Journal.Entries() == jn + 2, "my own loot line is not their drop")
   before = #printed
   theirs.tell.__scripts.OnClick(theirs.tell)
-  local askText = "Sift: Marcus, " .. link(1006) .. " would be +3.4% for me after 1 upgrade, if you do not need it"
+  local askText = "Sift: Marcus, need " .. link(1006) .. "? Would be +3.4% for me after 1 upgrade, if you do not need it."
   check(printed[#printed]:find("would post to PARTY: " .. askText, 1, true), "Ask dry-runs the ask: " .. tostring(printed[#printed]))
   je = ns.Journal.Entries()[#ns.Journal.Entries()]
   check(je.kind == "dryrun" and je.text == askText, "the ask is journaled as a dry run")
