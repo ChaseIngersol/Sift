@@ -44,6 +44,7 @@ Adapters\Probe.lua
 Adapters\Status.lua
 Adapters\Vault.lua
 Adapters\LootRoll.lua
+Adapters\GroupLoot.lua
 
 UI\Style.lua
 UI\EditMode.lua

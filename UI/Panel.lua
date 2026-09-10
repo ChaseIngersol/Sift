@@ -239,7 +239,7 @@ local function onRowEnter(row)
   if row.dismissable then row.dismiss:Show() end
   if row.ackable then row.act:Show() end
   if row.tellable then
-    row.tell.label:SetText(ns.GroupChat.Label())
+    row.tell.label:SetText(row.theirs and "Ask" or ns.GroupChat.Label())
     row.tell:SetWidth(row.tell.label:GetStringWidth() + 12)
     row.tell:Show()
   end
@@ -309,7 +309,7 @@ local function acquireRow()
     if r.reason.SetMaxLines then r.reason:SetMaxLines(4) end
 
     r.dismiss = Style.TextButton(r, "Dismiss", Style.SIZE.meta, function()
-      if r.guid then ns.Verdicts.ClearHold(r.guid) end
+      if r.onDismiss then r.onDismiss() elseif r.guid then ns.Verdicts.ClearHold(r.guid) end
       ns.Triggers.SyncWakeEvents()
       Panel.Refresh()
     end)
@@ -327,7 +327,12 @@ local function acquireRow()
 
     -- "Tell party" on a piece the group could still be traded.
     r.tell = Style.TextButton(r, "Tell party", Style.SIZE.meta, function()
-      if r.entry then ns.GroupChat.Tell(r.entry.facts, r.entry.verdict) end
+      if not r.entry then return end
+      if r.theirs then
+        ns.GroupLoot.Ask(r.theirs, r.entry.facts, r.entry.verdict)
+      else
+        ns.GroupChat.Tell(r.entry.facts, r.entry.verdict)
+      end
     end)
     r.tell:SetPoint("RIGHT", r.act, "LEFT", -4, 0)
     r.tell:Hide()
@@ -389,6 +394,7 @@ local function collect()
   local Verdicts = ns.Verdicts
   local groups = {
     { key = "vault", title = "Great Vault, pick one", items = {} },
+    { key = "theirs", title = "Their drops, worth asking for", items = {} },
     { key = "now", title = "Do now", items = {} },
     { key = "wait", title = "Waiting on crests or charges", items = {} },
     { key = "sim", title = "Too close to call, sim it", items = {} },
@@ -409,6 +415,17 @@ local function collect()
       local o = row.option
       table.insert(byKey.vault.items, { icon = o.icon, name = o.name, quality = o.quality, link = o.link, itemDBID = o.itemDBID,
         reason = R.Line(o), verb = R.Verb(o), kind = R.Kind(o), meta = R.SourceText(row) })
+    end
+  end
+
+  -- Their drops this group, while the buttons show at all.
+  if ns.GroupLoot and ns.GroupChat.Showing() then
+    for _, rec in ipairs(ns.GroupLoot.Recent()) do
+      local f, v = rec.entry.facts, rec.entry.verdict
+      table.insert(byKey.theirs.items, { icon = f.icon, name = f.name, quality = f.quality, link = f.link, gain = ns.Engine.Gain(v), entry = rec.entry,
+        reason = v.reason, brief = briefWith(v.brief, "Tradeable to you for two hours after the drop."), verb = rec.player .. " got", kind = v.kind,
+        meta = ns.Engine.Headline(v) .. " for you", theirs = rec.player, dismissable = true,
+        onDismiss = function() ns.GroupLoot.Dismiss(rec) end })
     end
   end
 
@@ -601,7 +618,9 @@ local function layout(groups)
       r.dismissable = item.dismissable
       r.ackable = item.ackable
       r.entry = item.entry
-      r.tellable = item.entry ~= nil and ns.GroupChat.Offers(item.entry.facts)
+      r.theirs = item.theirs
+      r.onDismiss = item.onDismiss
+      r.tellable = item.entry ~= nil and (item.theirs and ns.GroupChat.Showing() or (not item.theirs and ns.GroupChat.Offers(item.entry.facts)))
       local h = math.max(ROW_H, math.ceil(textH) + REASON_TOP + ROW_PAD)
       r:SetHeight(h)
       y = y + h

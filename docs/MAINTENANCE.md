@@ -87,6 +87,7 @@ branch `live`) when any of these break.
 | Catalyst | `Adapters/ItemFacts.lua` | `C_Item.IsItemConvertibleAndValidForPlayer` for anything with a location. A bare link (vault offer, roll window) is inferred: non-tier piece, tier slot, current track. |
 | Journal | `Adapters/Journal.lua` | `GetInstanceInfo` for the run's name and instance id, `GetZoneText` outside, `C_ChallengeMode.GetActiveKeystoneInfo` for the key level, and `CHALLENGE_MODE_START` to split runs. |
 | Group chat | `Adapters/GroupChat.lua`, `Adapters/ItemFacts.lua` | `SendChatMessage` to PARTY, RAID or INSTANCE_CHAT from a click; `IsInGroup`, `IsInRaid`, `GetNumGroupMembers`, `UnitClass` on party and raid units; the tooltip's `BIND_TRADE_TIME_REMAINING` line, matched up to its first placeholder, for what can still be traded. |
+| Their drops | `Adapters/GroupLoot.lua` | `ENCOUNTER_LOOT_RECEIVED` (link, player) for boss loot; `CHAT_MSG_LOOT` parsed with the client's own `LOOT_ITEM` and `LOOT_ITEM_MULTIPLE` strings for the rest, the keystone chest included; `Ambiguate` for short names. Loot is assumed tradeable to eligible group members for two hours. |
 | Spec facts | `Adapters/SpecScan.lua`, `Core/Specs.lua` | The client's spec records (primary stat, role, name) for every class. |
 
 ## Invariants

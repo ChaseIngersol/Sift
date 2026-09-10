@@ -166,6 +166,7 @@ local function plainWhen(b)
   w = w:gsub(",%s*%d+%s+%a+%s+crests?", ""):gsub(",%s*free$", "")
   return w
 end
+GroupChat.PlainWhen = plainWhen
 
 -- The line for a drop of yours. Returns text, word, brief, wear.
 function GroupChat.Text(f, v)
@@ -232,7 +233,7 @@ function GroupChat.Post(text, e, channel, test)
   end
   e = e or {}
   local live = GroupChat.LIVE and not ns.DB.Prefs().debug and not test
-  local kind = live and "post" or "dryrun"
+  local kind = live and (e.kind or "post") or "dryrun"
   if live then
     SendChatMessage(text, channel)
   else

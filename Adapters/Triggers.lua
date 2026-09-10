@@ -65,6 +65,8 @@ local function toastFor(entry)
   }
 end
 
+Triggers.ToastFor = toastFor
+
 -- chatOnly: a scan repeats what the panel already shows, so it never
 -- toasts. The toast is for what just landed.
 local function announce(entry, prefixWord, chatOnly)

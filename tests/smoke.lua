@@ -349,6 +349,9 @@ function IsInRaid() return group.kind == "raid" end
 function GetNumGroupMembers() if not group.kind then return 0 end return #group.members + 1 end
 function UnitIsUnit(a, b) return a == b or (a == "raid1" and b == "player") end
 function SendChatMessage(text, channel) chatSent[#chatSent + 1] = { text = text, channel = channel } end
+function Ambiguate(name) return (name:match("^(.-)%-") or name) end
+LOOT_ITEM = "%s receives loot: %s."
+LOOT_ITEM_MULTIPLE = "%s receives loot: %sx%d."
 local function memberOf(unit)
   local i = unit:match("^party(%d+)$")
   if i then return group.members[tonumber(i)] end
@@ -1627,6 +1630,61 @@ do
     { name = "Bob", className = "Rogue", classFile = "ROGUE", classID = 4 },
   }
   group.kind = "party"
+
+  -- Their drops. A boss drop for Marcus that is an upgrade for me
+  -- becomes a toast row with Ask; the chat message for the same drop
+  -- counts once; a drop that is nothing for me is journaled and no more;
+  -- my own loot is left to the bag scan.
+  fire("GROUP_ROSTER_UPDATE")
+  check(ns.GroupLoot.Watching(), "in a group the loot events are watched")
+  local base = ns.Toast.Count()
+  local rowsBefore = ns.db.prefs.toastRows
+  ns.db.prefs.toastRows = 8
+  ns.Toast.Refresh()
+  jn = #ns.Journal.Entries()
+  fire("ENCOUNTER_LOOT_RECEIVED", 2000, 1006, link(1006), 1, "Marcus-Realm", "PALADIN")
+  local theirs
+  for i = 1, 8 do local r = ns.Toast.Row(i); if r and r.entry and r.entry.t.theirs then theirs = r end end
+  check(theirs and theirs.entry.t.headline == "Marcus got" and theirs.entry.t.link == link(1006) and theirs.entry.t.line:find("for you", 1, true), "a groupmate's upgrade for me is a toast row: " .. tostring(theirs and theirs.entry.t.headline))
+  check(theirs and theirs.tell.__shown and theirs.tell.label.__text == "Ask", "with an Ask button")
+  je = ns.Journal.Entries()[#ns.Journal.Entries()]
+  check(#ns.Journal.Entries() == jn + 1 and je.kind == "theirs" and je.player == "Marcus" and je.word == "Upgrade", "their drop is journaled with the player and the word (" .. tostring(je.kind) .. ")")
+  fire("CHAT_MSG_LOOT", "Marcus receives loot: " .. link(1006) .. ".")
+  check(#ns.Journal.Entries() == jn + 1 and ns.Toast.Count() == base + 1, "the chat message for the same drop counts once")
+  fire("CHAT_MSG_LOOT", "Elena receives loot: " .. link(1007) .. ".")
+  je = ns.Journal.Entries()[#ns.Journal.Entries()]
+  check(#ns.Journal.Entries() == jn + 2 and je.kind == "theirs" and je.player == "Elena" and je.word == "Dispose" and ns.Toast.Count() == base + 1, "a drop that is nothing for me is on record and nowhere else")
+  fire("CHAT_MSG_LOOT", "Tester receives loot: " .. link(1006) .. ".")
+  check(#ns.Journal.Entries() == jn + 2, "my own loot line is not their drop")
+  before = #printed
+  theirs.tell.__scripts.OnClick(theirs.tell)
+  local askText = "Sift: Marcus, " .. link(1006) .. " would be +3.4% for me after 1 upgrade, if you do not need it"
+  check(printed[#printed]:find("would post to PARTY: " .. askText, 1, true), "Ask dry-runs the ask: " .. tostring(printed[#printed]))
+  je = ns.Journal.Entries()[#ns.Journal.Entries()]
+  check(je.kind == "dryrun" and je.text == askText, "the ask is journaled as a dry run")
+  check(#ns.GroupLoot.Recent() == 1, "the drop stays on the list for the panel")
+  if not ns.Panel.IsShown() then ns.Panel.Toggle() end
+  ns.Panel.Refresh()
+  local grp
+  for _, g in ipairs(ns.Panel.Groups()) do if g.key == "theirs" then grp = g end end
+  check(grp and #grp.items == 1 and grp.items[1].verb == "Marcus got" and grp.items[1].theirs == "Marcus", "the panel groups their drops worth asking for")
+  local trow
+  for i = 1, 40 do local r = ns.Panel.Row(i); if r and r.__shown and r.theirs == "Marcus" then trow = r end end
+  check(trow and trow.tellable, "the panel row can ask")
+  trow.__scripts.OnEnter(trow)
+  check(trow.tell.label.__text == "Ask" and trow.dismiss.__shown, "hovering shows Ask and Dismiss")
+  trow.dismiss.__scripts.OnClick(trow.dismiss)
+  check(#ns.GroupLoot.Recent() == 0 and ns.Toast.Count() == base, "Dismiss drops the row and its toast")
+  ns.Panel.Toggle()
+  fire("ENCOUNTER_LOOT_RECEIVED", 2000, 1006, link(1006), 1, "Bob-Realm", "ROGUE")
+  check(#ns.GroupLoot.Recent() == 1, "another groupmate's drop of the same piece is its own row")
+  group.kind = nil
+  fire("GROUP_ROSTER_UPDATE")
+  check(not ns.GroupLoot.Watching() and #ns.GroupLoot.Recent() == 0 and ns.Toast.Count() == base, "leaving the group ends the watch and clears their drops")
+  group.kind = "party"
+  fire("GROUP_ROSTER_UPDATE")
+  ns.db.prefs.toastRows = rowsBefore
+  ns.Toast.Refresh()
 
   -- Raid and instance groups pick their channel and label.
   group.kind = "raid"

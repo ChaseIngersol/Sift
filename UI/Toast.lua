@@ -128,8 +128,9 @@ local function fill(r, t, sample)
   -- One click tells the group, when the piece can be traded to it.
   r.line:ClearAllPoints()
   r.line:SetPoint("BOTTOMLEFT", r.icon, "BOTTOMRIGHT", 10, 0)
-  if not sample and ns.GroupChat and ns.GroupChat.Offers(t.facts) then
-    r.tell.label:SetText(ns.GroupChat.Label())
+  local offer = not sample and ns.GroupChat and (t.theirs and ns.GroupChat.Showing() or (not t.theirs and ns.GroupChat.Offers(t.facts)))
+  if offer then
+    r.tell.label:SetText(t.theirs and "Ask" or ns.GroupChat.Label())
     r.tell:SetWidth(r.tell.label:GetStringWidth() + 12)
     r.tell:Show()
     r.line:SetPoint("RIGHT", r.tell, "LEFT", -2, 0)
@@ -171,7 +172,11 @@ local function newRow(i)
   r.tell = Style.TextButton(r, "Tell party", Style.SIZE.meta, function()
     local e = r.entry
     if editing or not e or not e.t.facts then return end
-    ns.GroupChat.Tell(e.t.facts, e.t.verdict)
+    if e.t.theirs then
+      ns.GroupLoot.Ask(e.t.theirs, e.t.facts, e.t.verdict)
+    else
+      ns.GroupChat.Tell(e.t.facts, e.t.verdict)
+    end
   end)
   r.tell:SetPoint("BOTTOMRIGHT", r, "BOTTOMRIGHT", -2, 1)
   r.tell:Hide()
