@@ -26,10 +26,20 @@ local function store()
 end
 
 -- Where the character is, as one string: "Ara-Kara +12" in a keystone,
--- "Nerub-ar Palace (Heroic)" in a raid, the zone outside.
+-- "Nerub-ar Palace (Heroic)" in a raid, the zone outside. A keystone's
+-- name and level are read once when it starts and kept for the run:
+-- the end chest opens after the key has completed, when the game no
+-- longer reports one, and the map's own name can differ from the
+-- keystone's.
 local function place()
+  local j = store()
   local name, kind, _, difficulty, _, _, _, id
   if GetInstanceInfo then name, kind, _, difficulty, _, _, _, id = GetInstanceInfo() end
+  id = id or 0
+  local key = j and j.key
+  if key and key.instance == id then
+    return string.format("%s +%d", key.name or name or "?", key.level or 0), id, kind
+  end
   if (kind == nil or kind == "none") and GetZoneText then
     local zone = GetZoneText()
     if zone and zone ~= "" then name = zone end
@@ -45,25 +55,51 @@ local function place()
   elseif (kind == "raid" or kind == "party") and difficulty and difficulty ~= "" then
     name = string.format("%s (%s)", name, difficulty)
   end
-  return name, id or 0
+  return name, id, kind
+end
+
+-- Remember the run the character is in, so an instance that gave
+-- nothing is still on record by name.
+local function mark(j, where, kind)
+  j.where = where
+  if kind and kind ~= "none" then
+    j.lastInstance = { run = j.run, where = where, t = time() }
+  end
 end
 
 -- A new run when the instance is not the one the last entry saw.
 function Journal.Sync()
   local j = store()
   if not j then return end
-  local _, id = place()
+  local where, id, kind = place()
   if j.instance ~= id then
     j.instance = id
     j.run = j.run + 1
+    j.key = nil
+    where, id, kind = place()
   end
+  mark(j, where, kind)
 end
 
--- A keystone starting is a new run even inside the same dungeon.
+-- A keystone starting is a new run even inside the same dungeon. Its
+-- level and its dungeon's name are kept for the run.
 function Journal.NewRun()
   local j = store()
   if not j then return end
+  Journal.Sync()
   j.run = j.run + 1
+  local cm = C_ChallengeMode
+  local level = cm and cm.GetActiveKeystoneInfo and cm.GetActiveKeystoneInfo()
+  local name
+  if cm and cm.GetActiveChallengeMapID and cm.GetMapUIInfo then
+    local mapID = cm.GetActiveChallengeMapID()
+    if mapID then name = cm.GetMapUIInfo(mapID) end
+  end
+  if level and level > 0 then
+    j.key = { level = level, name = name, instance = j.instance }
+  end
+  local where, _, kind = place()
+  mark(j, where, kind)
 end
 
 local function itemName(link)
@@ -165,12 +201,21 @@ local function header(entries)
 end
 
 -- The last run as lines, headed by where and when it was. all: every
--- run on file, oldest first. plain: names instead of links.
+-- run on file, oldest first. plain: names instead of links. An
+-- instance that gave nothing since the last run with entries is said
+-- first, by name, so a keystone with no drop for you is not mistaken
+-- for the run before it.
 function Journal.Lines(all, plain)
   local lines = {}
   local list = all and Journal.Entries() or Journal.LastRun()
+  local j = store()
+  local empty = j and j.lastInstance
+  if empty and (#list == 0 or empty.run > list[#list].run) then
+    lines[#lines + 1] = string.format("Journal: %s, %s: nothing dropped for you, nothing posted.", empty.where or "?", clock(empty.t, "%a %H:%M"))
+    if #list > 0 then lines[#lines + 1] = "The last run with anything in it:" end
+  end
   if #list == 0 then
-    lines[1] = "Journal: nothing on record yet. Sift writes down every drop it judges, every roll it advises on and every line it posts to a group."
+    lines[#lines + 1] = "Journal: nothing on record yet. Sift writes down every drop it judges, every roll it advises on and every line it posts to a group."
     return lines
   end
   local run, group = nil, {}

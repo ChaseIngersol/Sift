@@ -318,7 +318,10 @@ local keystone = nil
 C_ChallengeMode = {
   IsChallengeModeActive = function() return keystone ~= nil end,
   GetActiveKeystoneInfo = function() return keystone, {}, false end,
+  GetActiveChallengeMapID = function() return keystone and 503 or nil end,
+  GetMapUIInfo = function(id) if id == 503 then return "Ara-Kara", 503, 1800 end end,
 }
+function issecretvalue() return false end
 function GetInstanceInfo() return instance.name, instance.kind, 1, instance.difficulty, 5, 0, false, instance.id, 5, nil end
 function GetZoneText() return instance.zone end
 local CLASS_SPECS = {
@@ -1448,26 +1451,50 @@ do
   keystone = 12
   fire("CHALLENGE_MODE_START")
   local e = ns.Journal.Add("dryrun", { link = link(1006), channel = "PARTY", text = "Sift: " .. link(1006) .. " +3.4% for me. Taking it." })
-  check(e.run == 3 and e.where == "Ara-Kara, City of Echoes +12", "entering the dungeon and starting the key each open a run; the entry names the key (" .. tostring(e.run) .. ", " .. tostring(e.where) .. ")")
+  check(e.run == 3 and e.where == "Ara-Kara +12", "entering the dungeon and starting the key each open a run; the entry carries the keystone's own name and level (" .. tostring(e.run) .. ", " .. tostring(e.where) .. ")")
   local last = ns.Journal.LastRun()
   check(#last == 1 and last[1] == e, "the last run holds only what happened since the key started")
   before = #printed
   slash("journal")
-  check(printed[before + 1]:find("Journal: Ara-Kara, City of Echoes +12, ", 1, true) and printed[before + 2]:find("would have posted to PARTY: Sift: ", 1, true) and #printed == before + 2,
+  check(printed[before + 1]:find("Journal: Ara-Kara +12, ", 1, true) and printed[before + 2]:find("would have posted to PARTY: Sift: ", 1, true) and #printed == before + 2,
     "the dry run reads back as what would have been posted: " .. tostring(printed[before + 2]))
   before = #printed
   slash("journal all")
   check(#printed == before + n + 3, "/sift journal all prints every run with a heading each")
 
+  -- The key completes: the game no longer reports one, the chest loot
+  -- still lands under the key's name and level.
+  keystone = nil
+  local chest = ns.Journal.Add("drop", { link = link(1001), word = "Equip", brief = "" })
+  check(chest.run == 3 and chest.where == "Ara-Kara +12", "loot after the key completes still names the key (" .. tostring(chest.where) .. ")")
+
   -- Leaving, then a later drop back in town: a run of its own, and the
   -- last run with anything in it is what the command shows.
+  instance.name, instance.kind, instance.difficulty, instance.id = "Khaz Algar", "none", "", 2552
+  fire("PLAYER_ENTERING_WORLD")
+  check(#ns.Journal.LastRun() == 2 and ns.Journal.LastRun()[2] == chest, "an empty run after the key does not hide it")
+  local w = ns.Journal.Add("drop", { link = link(1001), word = "Equip", brief = "" })
+  check(w.where == "Dornogal" and w.run == 4, "back outside, the key's name is gone with it (" .. tostring(w.where) .. ")")
+
+  -- A keystone that drops nothing for you is still on record by name,
+  -- ahead of the last run that had something, even after leaving.
+  instance.name, instance.kind, instance.difficulty, instance.id = "King's Rest", "party", "Mythic Keystone", 1762
+  fire("PLAYER_ENTERING_WORLD")
+  keystone = 10
+  C_ChallengeMode.GetMapUIInfo = function() return "King's Rest", 375, 2100 end
+  fire("CHALLENGE_MODE_START")
   keystone = nil
   instance.name, instance.kind, instance.difficulty, instance.id = "Khaz Algar", "none", "", 2552
   fire("PLAYER_ENTERING_WORLD")
-  check(#ns.Journal.LastRun() == 1 and ns.Journal.LastRun()[1] == e, "an empty run after the key does not hide it")
+  before = #printed
+  slash("journal")
+  check(printed[before + 1]:find("Journal: King's Rest +10, ", 1, true) and printed[before + 1]:find("nothing dropped for you", 1, true), "an instance with no drop is named first: " .. tostring(printed[before + 1]))
+  check(printed[before + 2] == "|cff7fd7ffSift|r: The last run with anything in it:" and printed[before + 3]:find("Journal: Dornogal, ", 1, true), "then the last run with entries follows")
+  C_ChallengeMode.GetMapUIInfo = function(id) if id == 503 then return "Ara-Kara", 503, 1800 end end
   for i = 1, 320 do ns.Journal.Add("drop", { link = link(1001), word = "Equip", brief = "" }) end
-  check(#ns.Journal.Entries() == 300 and ns.Journal.Entries()[1].run == 4, "the journal keeps the last three hundred entries")
+  check(#ns.Journal.Entries() == 300 and ns.Journal.Entries()[1].run == ns.db.journal.run, "the journal keeps the last three hundred entries")
   ns.db.journal.entries = {}
+  ns.db.journal.lastInstance = nil
   before = #printed
   slash("journal")
   check(#printed == before + 1 and printed[before + 1]:find("nothing on record yet", 1, true), "an empty journal says so")
