@@ -17,7 +17,20 @@ local AltCompare = {}
 ns.AltCompare = AltCompare
 
 local HEADER_PAD = 30 -- Blizzard's COMPARE_HEADER_PADDING
+local HEADER_VPAD = 5 -- above and below the label: Blizzard's 22 px header around a 12 px line
 local DAY = 86400
+
+-- A measurement, or nil when the client will not let insecure code
+-- read it. In Midnight a tooltip filled with secret lines has a secret
+-- size, and every region anchored to it inherits that: GetWidth on the
+-- header's label comes back as a secret number, which Lua cannot add
+-- to. Blizzard sizes its own header with that very sum, as secure
+-- code may.
+local function plain(v)
+  if v == nil then return nil end
+  if issecretvalue and issecretvalue(v) then return nil end
+  return v
+end
 local panes = {}
 local suppressing = false
 
@@ -155,8 +168,20 @@ local function fillPane(tip, worn, candidateLink, snap)
   tip:SetOwner(GameTooltip, "ANCHOR_NONE")
   tip:ClearAllPoints()
   tip.CompareHeader:Show()
-  tip.CompareHeader.Label:SetText(string.format("Equipped on %s", snap.name or "alt"))
-  tip.CompareHeader:SetWidth(tip.CompareHeader.Label:GetWidth() + HEADER_PAD)
+  local label = tip.CompareHeader.Label
+  label:SetText(string.format("Equipped on %s", snap.name or "alt"))
+  -- The header hugs its label by anchors alone: the label sits where
+  -- Blizzard's would, and the header's corners hang off the label's
+  -- with the padding in the offsets, so no width is ever measured.
+  if not tip.siftHeaderAnchored then
+    tip.siftHeaderAnchored = true
+    label:ClearAllPoints()
+    -- Blizzard's header hangs one pixel over the tooltip's top edge.
+    label:SetPoint("BOTTOMLEFT", tip, "TOPLEFT", HEADER_PAD / 2, HEADER_VPAD - 1)
+    tip.CompareHeader:ClearAllPoints()
+    tip.CompareHeader:SetPoint("TOPLEFT", label, "TOPLEFT", -HEADER_PAD / 2, HEADER_VPAD)
+    tip.CompareHeader:SetPoint("BOTTOMRIGHT", label, "BOTTOMRIGHT", HEADER_PAD / 2, -HEADER_VPAD)
+  end
   tip:ProcessInfo({ tooltipData = data, append = true })
   local lines = deltaLines(candidateLink, worn)
   if #lines > 0 then
@@ -185,17 +210,26 @@ local function anchor(tip, shown1, shown2)
   if panes[2] then panes[2]:SetShown(shown2) end
   if not shown1 then return end
   local p1, p2 = panes[1], panes[2]
-  local left, right = tip:GetLeft() or 0, tip:GetRight() or 0
-  local total = p1:GetWidth() + (shown2 and p2:GetWidth() or 0)
-  local screenW = GetScreenWidth()
-  local rightDist = screenW - right
   local anchorType = tip.GetAnchorType and tip:GetAnchorType()
+  -- Widths and edges can be secret (see plain). Without them the panes
+  -- take the side the anchor type implies and nothing slides.
+  local left, right = plain(tip:GetLeft()), plain(tip:GetRight())
+  local w1, w2 = plain(p1:GetWidth()), shown2 and plain(p2:GetWidth()) or 0
+  local screenW = plain(GetScreenWidth())
+  local measured = left ~= nil and right ~= nil and w1 ~= nil and w2 ~= nil and screenW ~= nil
   local side
-  if anchorType and total < left and LEFT_ANCHORS[anchorType] then side = "left"
-  elseif anchorType and total < rightDist and RIGHT_ANCHORS[anchorType] then side = "right"
-  elseif rightDist < left then side = "left"
-  else side = "right" end
-  if anchorType and anchorType ~= "ANCHOR_PRESERVE" and tip.SetAnchorType then
+  if measured then
+    local total = w1 + w2
+    local rightDist = screenW - right
+    if anchorType and total < left and LEFT_ANCHORS[anchorType] then side = "left"
+    elseif anchorType and total < rightDist and RIGHT_ANCHORS[anchorType] then side = "right"
+    elseif rightDist < left then side = "left"
+    else side = "right" end
+  else
+    side = (anchorType and LEFT_ANCHORS[anchorType]) and "left" or "right"
+  end
+  if measured and anchorType and anchorType ~= "ANCHOR_PRESERVE" and tip.SetAnchorType then
+    local total = w1 + w2
     local slide = 0
     if side == "left" and total > left then slide = total - left
     elseif side == "right" and right + total > screenW then slide = screenW - (right + total) end
