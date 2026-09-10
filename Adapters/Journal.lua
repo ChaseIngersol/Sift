@@ -119,6 +119,7 @@ function Journal.Add(kind, e)
     player = e.player, link = e.link, name = e.name or itemName(e.link),
     word = e.word, brief = e.brief, wear = e.wear, channel = e.channel, text = e.text,
   }
+  if ns.GroupChat and ns.GroupChat.demo then entry.demo = true end
   local list = j.entries
   list[#list + 1] = entry
   while #list > MAX do table.remove(list, 1) end
@@ -189,6 +190,7 @@ local function describe(e, plain)
   if e.wear and e.wear ~= "" and e.kind ~= "post" and e.kind ~= "dryrun" and e.kind ~= "ask" then
     body = body .. " (could wear it: " .. e.wear .. ")"
   end
+  if e.demo then body = body .. " (demo)" end
   if plain then body = body:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("|H.-|h", ""):gsub("|h", "") end
   return string.format("  %s %s", clock(e.t, "%H:%M"), body)
 end

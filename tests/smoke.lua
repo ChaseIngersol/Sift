@@ -739,7 +739,7 @@ do -- The command reference: one row per command, developer rows only with debug
     end
   end
   check(#missing == 0, "every command has a row on the settings page (missing: " .. table.concat(missing, ", ") .. ")")
-  check(user == 13 and dev == 5, "thirteen player rows and five developer rows (" .. user .. "/" .. dev .. ")")
+  check(user == 13 and dev == 6, "thirteen player rows and six developer rows (" .. user .. "/" .. dev .. ")")
   -- The Defaults button restores what ships, not what was set at login
   -- (debug was on in this world from the start).
   check(settingsDefaults.debug == false and settingsDefaults.toast == true and settingsDefaults.sound == false and settingsDefaults.parked == false,
@@ -1747,7 +1747,36 @@ do
   slash("chat")
   check(printed[before + 1]:find("not live yet", 1, true) and printed[before + 2]:find("not in a group", 1, true), "/sift chat says the switch is off and there is no group")
 
+  -- The demo stands in for a group and for the trade windows.
+  group.kind = nil
+  group.members = {}
+  fire("GROUP_ROSTER_UPDATE")
   ns.db.prefs.debug = false
+  before = #printed
+  jn = #ns.Journal.Entries()
+  slash("chat demo")
+  check(G.demo and G.Channel() == "PARTY" and #G.Members() == 3 and G.Members()[1].name == "Marcus", "the demo is a pretend party")
+  local said = false
+  for i = before + 1, #printed do if printed[i]:find("demo party: Marcus", 1, true) then said = true end end
+  check(said, "and says so")
+  local demoRow, demoTheirs
+  for i = 1, 8 do
+    local r = ns.Toast.Row(i)
+    if r and r.entry then
+      if r.entry.t.theirs then demoTheirs = r elseif r.tell.__shown then demoRow = r end
+    end
+  end
+  check(demoRow ~= nil, "bag rows offer Tell party without a trade line")
+  check(demoTheirs ~= nil and demoTheirs.entry.t.theirsClass == "PALADIN" and #ns.GroupLoot.Recent() >= 1, "an upgrade of my own is shown as Marcus's drop")
+  G.LIVE = true
+  before = #printed
+  demoTheirs.tell.__scripts.OnClick(demoTheirs.tell)
+  check(#chatSent == 1 and printed[#printed]:find("would post to PARTY: Sift: Marcus, ", 1, true), "a demo click is a dry run even live")
+  G.LIVE = false
+  je = ns.Journal.Entries()[#ns.Journal.Entries()]
+  check(je.demo == true and ns.Journal.Lines()[#ns.Journal.Lines()]:find("(demo)", 1, true), "demo lines are marked in the journal")
+  slash("chat demo off")
+  check(not G.demo and G.Channel() == nil and #ns.GroupLoot.Recent() == 0 and ns.Toast.Count() == 0, "demo off clears the pretend party and its rows")
   ns.db.prefs.toastRows = rowsBefore
   table.remove(ITEMS[1006].tooltip)
   table.remove(ITEMS[1007].tooltip)

@@ -16,6 +16,16 @@ ns.GroupChat = GroupChat
 
 GroupChat.LIVE = false
 
+-- /sift chat demo: a pretend party and pretend trade windows, so every
+-- button and line can be seen without a group or a drop. Always a dry
+-- run, even live.
+GroupChat.demo = false
+local DEMO_MEMBERS = {
+  { name = "Marcus", classID = 2, classFile = "PALADIN" },
+  { name = "Elena", classID = 8, classFile = "MAGE" },
+  { name = "Bob", classID = 4, classFile = "ROGUE" },
+}
+
 local NO_ARMOR_CHECK = { INVTYPE_CLOAK = true, INVTYPE_NECK = true, INVTYPE_FINGER = true, INVTYPE_TRINKET = true, INVTYPE_HOLDABLE = true }
 local ARMOR_NAME = { [1] = "Cloth", [2] = "Leather", [3] = "Mail", [4] = "Plate" }
 local PRIMARY_NAME = { STRENGTH = "strength", AGILITY = "agility", INTELLECT = "intellect" }
@@ -28,7 +38,7 @@ end
 -- only in debug mode.
 function GroupChat.Showing()
   if not GroupChat.Enabled() then return false end
-  if not GroupChat.LIVE and not ns.DB.Prefs().debug then return false end
+  if not GroupChat.LIVE and not ns.DB.Prefs().debug and not GroupChat.demo then return false end
   return GroupChat.Channel() ~= nil
 end
 
@@ -46,7 +56,7 @@ end
 -- has nowhere to post.
 function GroupChat.Channel()
   local channel = rawChannel()
-  if not channel then return nil end
+  if not channel then return GroupChat.demo and "PARTY" or nil end
   if #GroupChat.Members() == 0 then return nil end
   return channel
 end
@@ -62,6 +72,10 @@ end
 -- Everyone else in the group: { name, classID, classFile }.
 function GroupChat.Members()
   local out = {}
+  if GroupChat.demo and not rawChannel() then
+    for _, m in ipairs(DEMO_MEMBERS) do out[#out + 1] = m end
+    return out
+  end
   local n = (GetNumGroupMembers and GetNumGroupMembers()) or 0
   local raid = IsInRaid and IsInRaid()
   local last = raid and n or (n - 1)
@@ -232,7 +246,7 @@ function GroupChat.Post(text, e, channel, test)
     return nil
   end
   e = e or {}
-  local live = GroupChat.LIVE and not ns.DB.Prefs().debug and not test
+  local live = GroupChat.LIVE and not ns.DB.Prefs().debug and not test and not GroupChat.demo
   local kind = live and (e.kind or "post") or "dryrun"
   if live then
     SendChatMessage(text, channel)
@@ -259,7 +273,30 @@ end
 -- Whether a drop of yours gets the button: tradeable to the group, and
 -- the buttons showing.
 function GroupChat.Offers(f)
-  return f ~= nil and GroupChat.Showing() and ns.ItemFacts.Tradeable(f)
+  if f == nil or not GroupChat.Showing() then return false end
+  if GroupChat.demo then return true end
+  return ns.ItemFacts.Tradeable(f)
+end
+
+-- The demo: a pretend party of three, every piece tradeable, the
+-- toast filled from the bags, and a few of the bag's own upgrades fed
+-- through as if Marcus, Elena and Bob had looted them. Ends with off,
+-- or a reload.
+function GroupChat.Demo(on)
+  GroupChat.demo = on
+  if not on then
+    if ns.GroupLoot then ns.GroupLoot.Clear() end
+    if ns.Toast then ns.Toast.Clear() end
+    if ns.Panel then ns.Panel.Refresh() end
+    ns.Print("demo over")
+    return
+  end
+  local n = ns.Triggers.ShowToast()
+  local fed = ns.GroupLoot and ns.GroupLoot.Demo(DEMO_MEMBERS) or 0
+  if ns.Panel then ns.Panel.Refresh() end
+  ns.Print(string.format("demo party: Marcus (Paladin), Elena (Mage), Bob (Rogue). %d bag verdict%s on the toast, every piece treated as tradeable; %d of your own upgrades shown as if they had looted them.",
+    n, n == 1 and "" or "s", fed))
+  ns.Print("every button is a dry run here, live or not; the lines print in your chat and go to the journal marked demo. /sift chat demo off ends it.")
 end
 
 -- /sift chat test: every toast row, as it would be posted, printed here
@@ -284,6 +321,7 @@ function GroupChat.Status()
   local lines = {}
   lines[1] = GroupChat.LIVE and "group chat is live: a click posts to the group, unless debug mode is on"
     or "group chat is not live yet: every click is a dry run printed here and written to the journal"
+  if GroupChat.demo then lines[#lines + 1] = "demo on: a pretend party, every piece tradeable, every click a dry run. /sift chat demo off ends it" end
   if channel then
     lines[2] = "in a group: posts would go to " .. channel
   elseif rawChannel() then

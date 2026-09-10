@@ -31,6 +31,7 @@ local function usage()
     ns.Print("  /sift currency <track|catalyst> <id>   set a currency id by hand")
     ns.Print("  /sift reset confirm   wipe every snapshot, hold and preference")
     ns.Print("  /sift chat       where group chat stands; chat test prints what each toast row would post")
+    ns.Print("  /sift chat demo  a pretend party and pretend drops, to see every button; chat demo off ends it")
   end
 end
 
@@ -127,6 +128,10 @@ local handlers = {
   end,
   status = status,
   chat = function(rest)
+    if rest == "demo" or rest == "demo off" then
+      ns.GroupChat.Demo(rest == "demo")
+      return
+    end
     if rest == "test" then
       local n = ns.GroupChat.Test()
       if n == 0 then ns.Print("the toast is empty; /sift toast fills it with your bag verdicts first") end

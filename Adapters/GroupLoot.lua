@@ -201,6 +201,28 @@ function GroupLoot.Ask(player, f, v)
   return ns.GroupChat.Post(text, { link = f.link, word = word, brief = brief, kind = "ask" })
 end
 
+-- Everything gone, as when the group ends.
+function GroupLoot.Clear()
+  pending, seen, recent = {}, {}, {}
+  if ns.Toast then ns.Toast.Remove(function(t) return t.theirs ~= nil end) end
+end
+
+-- The demo: the bags' own upgrades fed through as the members' drops,
+-- one member each in turn. Returns how many.
+function GroupLoot.Demo(members)
+  seen = {}
+  local fed = 0
+  for _, e in ipairs(ns.Verdicts.ScanAll()) do
+    if wanted(e.verdict) and e.facts.link then
+      local m = members[(fed % #members) + 1]
+      consider(m.name, e.facts.link, m.classFile)
+      fed = fed + 1
+      if fed >= #members then break end
+    end
+  end
+  return fed
+end
+
 -- For tests: feed one drop as the events would.
 function GroupLoot.Consider(player, link, classFile)
   consider(player, link, classFile)

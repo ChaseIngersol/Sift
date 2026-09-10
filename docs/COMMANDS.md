@@ -168,6 +168,15 @@ Where group chat stands: whether posting is live or every click is a
 dry run, the channel a post would go to, and who is in the group with
 their classes.
 
+`/sift chat demo`: a pretend party of three (Marcus the paladin, Elena
+the mage, Bob the rogue), every piece treated as tradeable, the toast
+filled from your bags with Tell party on each row, and up to three of
+your own upgrades fed through as if they had looted them, with the Ask
+button on the toast and in the panel. Every click is a dry run, live
+or not, and the journal marks these lines as demo. `/sift chat demo
+off` ends it, as does a reload. The roll strip is not part of it: the
+game's roll windows cannot be faked.
+
 `/sift chat test`: print what each toast row would post to the group,
 in your own chat frame, without posting anything, and write each line
 to the journal. Works outside a group. `/sift toast` fills the toast
