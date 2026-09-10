@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.5 - 2026-09-10
+
+- Hovering a send row no longer throws a Lua error. The "Equipped on"
+  panes beside the tooltip, which show what the alt wears, measured
+  their header to size it, and the game now hands that measurement
+  back as a secret value inside a tooltip. The panes size themselves
+  without measuring anything.
+
 ## 1.0.4 - 2026-09-08
 
 - The Great Vault ranking now sits on the vault's own cards: Take with
