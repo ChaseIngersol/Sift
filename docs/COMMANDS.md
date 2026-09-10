@@ -153,6 +153,11 @@ after a reload or logout.
 warband tabs (ids, slots, the first items with their GUIDs) and whether
 each send on record is found in them.
 
+`/sift probe lines <bag> <slot>`: print every tooltip line of a bag
+item as the client hands it over, with what Sift read from it: the
+binding, whether it is bound, and whether it can still be traded to
+the group. For the lines that come and go, such as the trade window.
+
 `/sift probe cold`: treat three worn pieces as not loaded yet, the way a
 cold client start can, and let their load callbacks rebuild the picture.
 `/sift status` then counts the re-read.

@@ -136,6 +136,26 @@ end
 
 -- Names of global strings whose value is exactly text, for pinning a
 -- locale-safe token. Walks _G, so probe use only.
+-- /sift probe lines <bag> <slot>: every tooltip line of a bag item as
+-- the client hands it over, with what Sift read from it. For the
+-- lines that come and go, such as the trade window.
+function Probe.Lines(bag, slot)
+  local ok, data = pcall(C_TooltipInfo.GetBagItem, bag, slot)
+  if not ok or type(data) ~= "table" or type(data.lines) ~= "table" then
+    ns.Print(string.format("no tooltip for bag %d slot %d", bag, slot))
+    return
+  end
+  local facts = ns.ItemFacts.FromBag(bag, slot)
+  ns.Print(string.format("bag %d slot %d: %s, %d lines", bag, slot, facts and (facts.link or facts.name) or "?", #data.lines))
+  for i, line in ipairs(data.lines) do
+    ns.Print(string.format("  %d [%s] %s", i, tostring(line.type), tostring(line.leftText or "")))
+  end
+  if facts then
+    ns.Print(string.format("  read: binding %s, bound %s, tradeable %s (now %s)", tostring(facts.binding), tostring(facts.bound),
+      tostring(facts.tradeable or false), tostring(ns.ItemFacts.Tradeable(facts))))
+  end
+end
+
 function Probe.GlobalsNamed(text)
   local names = {}
   for k, v in pairs(_G) do

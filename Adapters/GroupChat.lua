@@ -259,7 +259,7 @@ end
 -- Whether a drop of yours gets the button: tradeable to the group, and
 -- the buttons showing.
 function GroupChat.Offers(f)
-  return f ~= nil and f.tradeable == true and GroupChat.Showing()
+  return f ~= nil and GroupChat.Showing() and ns.ItemFacts.Tradeable(f)
 end
 
 -- /sift chat test: every toast row, as it would be posted, printed here

@@ -118,7 +118,15 @@ local function fill(r, t, sample)
   r.icon:SetTexture(sample and ICON or (t.icon or 134400))
   if sample then r.icon:SetTexCoord(0, 1, 0, 1) else r.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93) end
   local cr, cg, cb = Style.VerdictRGB(t.verdict)
-  r.verb:SetText(t.headline or "")
+  if t.theirs then
+    cr, cg, cb = unpack(Style.THEIRS_RGB)
+    r.verb:SetText(Style.ClassIcon(t.theirsClass) .. (t.headline or ""))
+    r.edge:SetColorTexture(cr, cg, cb, 1)
+    r.edge:Show()
+  else
+    r.verb:SetText(t.headline or "")
+    r.edge:Hide()
+  end
   r.verb:SetTextColor(cr, cg, cb)
   local qr, qg, qb = Style.QualityRGB(t.quality)
   r.name:SetText(t.link and t.link:match("%[(.-)%]") or "")
@@ -148,6 +156,13 @@ local function newRow(i)
   r.icon = r:CreateTexture(nil, "ARTWORK")
   r.icon:SetSize(34, 34)
   r.icon:SetPoint("LEFT", 4, 0)
+
+  -- A colored edge marks a row about someone else's drop.
+  r.edge = r:CreateTexture(nil, "ARTWORK")
+  r.edge:SetWidth(3)
+  r.edge:SetPoint("TOPLEFT", 0, 0)
+  r.edge:SetPoint("BOTTOMLEFT", 0, 0)
+  r.edge:Hide()
 
   r.verb = r:CreateFontString(nil, "OVERLAY")
   Style.Text(r.verb, Style.SIZE.verdict, Style.TEXT, "LEFT")

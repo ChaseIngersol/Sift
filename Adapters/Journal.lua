@@ -130,10 +130,11 @@ function Journal.Drop(entry)
   local f, v = entry.facts, entry.verdict
   if not f or not v then return end
   local me = ns.Character and ns.Character.Key and ns.Character.Key() or nil
-  Journal.Add("drop", {
+  local e = Journal.Add("drop", {
     player = me, link = f.link, name = f.name,
     word = ns.Engine.Headline(v), brief = ns.Engine.BriefLine(v) or v.reason,
   })
+  if e then e.tradeable = f.tradeable or false end
 end
 
 -- A Need/Greed window Sift put a word beside.

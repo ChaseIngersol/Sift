@@ -1526,6 +1526,8 @@ do
   check(G.Showing(), "with debug mode on they show, as a dry run")
 
   ns.db.prefs.toast = true
+  local rowsBefore = ns.db.prefs.toastRows
+  ns.db.prefs.toastRows = 8
   ns.Toast.Clear()
   local mine = putInBag(1, 1, 1006)
   local theirs = putInBag(1, 2, 1007)
@@ -1540,6 +1542,26 @@ do
   end
   check(rowMine and rowMine.entry.t.facts and rowMine.entry.t.facts.tradeable == true, "the trade window line marks the piece tradeable")
   check(rowMine and rowMine.tell.__shown and rowTheirs and rowTheirs.tell.__shown, "both tradeable rows offer Tell party")
+
+  -- The trade line can arrive after the bag scan: a piece judged
+  -- without it gets no button, and the button appears once the line
+  -- is there at display time. The journal keeps what was seen.
+  table.remove(ITEMS[1006].tooltip)
+  local late = putInBag(1, 3, 1006)
+  fire("BAG_UPDATE_DELAYED"); runTimers()
+  local rowLate
+  for i = 1, 8 do local r = ns.Toast.Row(i); if r and r.entry and r.entry.t.facts and r.entry.t.facts.guid == late.guid then rowLate = r end end
+  check(rowLate and not rowLate.tell.__shown and rowLate.entry.t.facts.tradeable == nil, "no trade line yet, no button")
+  local jl = ns.Journal.Entries()[#ns.Journal.Entries()]
+  check(jl.kind == "drop" and jl.tradeable == false, "the journal says the drop was not seen as tradeable")
+  table.insert(ITEMS[1006].tooltip, tradeLine)
+  ns.Toast.Refresh()
+  check(rowLate.tell.__shown and rowLate.entry.t.facts.tradeable == true, "the line read again at display time puts the button up")
+  bags[1][3] = nil
+  fire("BAG_UPDATE_DELAYED"); runTimers()
+  before = #printed
+  slash("probe lines 1 1")
+  check(printed[before + 1]:find("bag 1 slot 1: ", 1, true) and printed[#printed]:find("tradeable true (now true)", 1, true), "/sift probe lines dumps the tooltip and what was read: " .. tostring(printed[#printed]))
 
   before = #printed
   local jn = #ns.Journal.Entries()
@@ -1638,15 +1660,14 @@ do
   fire("GROUP_ROSTER_UPDATE")
   check(ns.GroupLoot.Watching(), "in a group the loot events are watched")
   local base = ns.Toast.Count()
-  local rowsBefore = ns.db.prefs.toastRows
-  ns.db.prefs.toastRows = 8
-  ns.Toast.Refresh()
   jn = #ns.Journal.Entries()
   fire("ENCOUNTER_LOOT_RECEIVED", 2000, 1006, link(1006), 1, "Marcus-Realm", "PALADIN")
   local theirs
   for i = 1, 8 do local r = ns.Toast.Row(i); if r and r.entry and r.entry.t.theirs then theirs = r end end
   check(theirs and theirs.entry.t.headline == "Marcus got" and theirs.entry.t.link == link(1006) and theirs.entry.t.line:find("for you", 1, true), "a groupmate's upgrade for me is a toast row: " .. tostring(theirs and theirs.entry.t.headline))
   check(theirs and theirs.tell.__shown and theirs.tell.label.__text == "Ask", "with an Ask button")
+  check(theirs and theirs.edge.__shown and theirs.entry.t.theirsClass == "PALADIN" and theirs.verb.__text:find("classicon-paladin", 1, true), "their row carries an edge and the looter's class icon")
+  check(rowMine and not rowMine.edge.__shown, "my own rows carry no edge")
   je = ns.Journal.Entries()[#ns.Journal.Entries()]
   check(#ns.Journal.Entries() == jn + 1 and je.kind == "theirs" and je.player == "Marcus" and je.word == "Upgrade", "their drop is journaled with the player and the word (" .. tostring(je.kind) .. ")")
   fire("CHAT_MSG_LOOT", "Marcus receives loot: " .. link(1006) .. ".")
@@ -1667,7 +1688,7 @@ do
   ns.Panel.Refresh()
   local grp
   for _, g in ipairs(ns.Panel.Groups()) do if g.key == "theirs" then grp = g end end
-  check(grp and #grp.items == 1 and grp.items[1].verb == "Marcus got" and grp.items[1].theirs == "Marcus", "the panel groups their drops worth asking for")
+  check(grp and #grp.items == 1 and grp.items[1].verb:find("Marcus got", 1, true) and grp.items[1].verb:find("classicon-paladin", 1, true) and grp.items[1].theirs == "Marcus", "the panel groups their drops worth asking for, with the class icon")
   local trow
   for i = 1, 40 do local r = ns.Panel.Row(i); if r and r.__shown and r.theirs == "Marcus" then trow = r end end
   check(trow and trow.tellable, "the panel row can ask")
@@ -1683,8 +1704,6 @@ do
   check(not ns.GroupLoot.Watching() and #ns.GroupLoot.Recent() == 0 and ns.Toast.Count() == base, "leaving the group ends the watch and clears their drops")
   group.kind = "party"
   fire("GROUP_ROSTER_UPDATE")
-  ns.db.prefs.toastRows = rowsBefore
-  ns.Toast.Refresh()
 
   -- Raid and instance groups pick their channel and label.
   group.kind = "raid"
@@ -1729,6 +1748,7 @@ do
   check(printed[before + 1]:find("not live yet", 1, true) and printed[before + 2]:find("not in a group", 1, true), "/sift chat says the switch is off and there is no group")
 
   ns.db.prefs.debug = false
+  ns.db.prefs.toastRows = rowsBefore
   table.remove(ITEMS[1006].tooltip)
   table.remove(ITEMS[1007].tooltip)
   bags[1][1], bags[1][2] = nil, nil

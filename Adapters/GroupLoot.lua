@@ -59,21 +59,31 @@ local function lootPatterns()
   return patterns
 end
 
+-- The looter's class token, from the encounter event or the roster.
+local function classOf(name, classFile)
+  if classFile and classFile ~= "" then return classFile end
+  for _, m in ipairs(ns.GroupChat.Members()) do
+    if m.name == name then return m.classFile end
+  end
+  return nil
+end
+
 -- The toast row and chat line for one of their drops worth asking for.
-local function announce(name, entry)
+local function announce(name, entry, classFile)
   local f, v = entry.facts, entry.verdict
   local brief = ns.Engine.BriefLine(v, ns.Style and ns.Style.GAIN_HEX) or v.reason
   local t = ns.Triggers.ToastFor(entry)
   t.headline = name .. " got"
   t.line = brief .. " for you"
   t.theirs = name
+  t.theirsClass = classFile
   ns.Triggers.Notify({
     text = string.format("%s got %s: %s for you. Ask on the toast or in the panel.", name, f.link or f.name, brief),
     toast = t,
   })
 end
 
-local function consider(player, link)
+local function consider(player, link, classFile)
   if not (player and link) then return end
   if not ns.GroupChat.Showing() then return end
   if isMe(player) then return end
@@ -85,28 +95,29 @@ local function consider(player, link)
   local entry, why = ns.Verdicts.ForLink(link)
   if not entry then
     if why == "uncached" then
-      pending[link] = player
+      pending[link] = { player = player, classFile = classFile }
       frame:RegisterEvent("GET_ITEM_INFO_RECEIVED")
     end
     return
   end
   local f, v = entry.facts, entry.verdict
   local name = shortName(player)
+  classFile = classOf(name, classFile)
   if ns.Journal then
     ns.Journal.Add("theirs", { player = name, link = f.link, name = f.name, word = ns.Engine.Headline(v), brief = ns.Engine.BriefLine(v) or v.reason })
   end
   if not wanted(v) then return end
-  recent[#recent + 1] = { player = name, entry = entry, t = time() }
-  announce(name, entry)
+  recent[#recent + 1] = { player = name, classFile = classFile, entry = entry, t = time() }
+  announce(name, entry, classFile)
 end
 
 local function retryPending()
   frame:UnregisterEvent("GET_ITEM_INFO_RECEIVED")
   local list = pending
   pending = {}
-  for link, player in pairs(list) do
-    seen[shortName(player) .. link] = nil
-    consider(player, link)
+  for link, who in pairs(list) do
+    seen[shortName(who.player) .. link] = nil
+    consider(who.player, link, who.classFile)
   end
 end
 
@@ -147,7 +158,7 @@ end
 local handlers = {
   GROUP_ROSTER_UPDATE = sync,
   PLAYER_ENTERING_WORLD = sync,
-  ENCOUNTER_LOOT_RECEIVED = function(_, _, link, _, player) consider(player, link) end,
+  ENCOUNTER_LOOT_RECEIVED = function(_, _, link, _, player, classFile) consider(player, link, classFile) end,
   CHAT_MSG_LOOT = onChatLoot,
   GET_ITEM_INFO_RECEIVED = function() retryPending() end,
 }
@@ -191,8 +202,8 @@ function GroupLoot.Ask(player, f, v)
 end
 
 -- For tests: feed one drop as the events would.
-function GroupLoot.Consider(player, link)
-  consider(player, link)
+function GroupLoot.Consider(player, link, classFile)
+  consider(player, link, classFile)
 end
 
 function GroupLoot.Watching()

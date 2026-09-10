@@ -423,7 +423,7 @@ local function collect()
     for _, rec in ipairs(ns.GroupLoot.Recent()) do
       local f, v = rec.entry.facts, rec.entry.verdict
       table.insert(byKey.theirs.items, { icon = f.icon, name = f.name, quality = f.quality, link = f.link, gain = ns.Engine.Gain(v), entry = rec.entry,
-        reason = v.reason, brief = briefWith(v.brief, "Tradeable to you for two hours after the drop."), verb = rec.player .. " got", kind = v.kind,
+        reason = v.reason, brief = briefWith(v.brief, "Tradeable to you for two hours after the drop."), verb = Style.ClassIcon(rec.classFile) .. rec.player .. " got", kind = v.kind,
         meta = ns.Engine.Headline(v) .. " for you", theirs = rec.player, dismissable = true,
         onDismiss = function() ns.GroupLoot.Dismiss(rec) end })
     end
@@ -610,7 +610,7 @@ local function layout(groups)
         textH = (r.reason.GetStringHeight and r.reason:GetStringHeight()) or 0
       end
       r.verb:SetText(item.verb or "")
-      r.verb:SetTextColor(unpack(Style.VERDICT_RGB[item.kind] or Style.TEXT))
+      r.verb:SetTextColor(unpack(item.theirs and Style.THEIRS_RGB or Style.VERDICT_RGB[item.kind] or Style.TEXT))
       r.meta:SetText(item.meta or "")
       r.dismiss:Hide()
       r.act:Hide()

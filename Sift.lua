@@ -102,6 +102,11 @@ local handlers = {
       ns.Bank.Probe()
       return
     end
+    local bag, slot = (rest or ""):match("^lines%s+(%d+)%s+(%d+)$")
+    if bag then
+      ns.Probe.Lines(tonumber(bag), tonumber(slot))
+      return
+    end
     if rest == "cold" then
       ns.Character.ColdTest(3)
       ns.Triggers.CheckWorn()

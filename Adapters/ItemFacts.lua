@@ -93,6 +93,29 @@ local function getTradeHead()
   return tradeHead
 end
 
+-- Whether the piece can still be traded to the group. The trade-window
+-- line can appear a moment after the item lands, later than the bag
+-- scan that built the facts, so a piece still in the bags is read
+-- again here, at display time, until the line is found.
+function Facts.Tradeable(f)
+  if not f then return false end
+  if f.tradeable then return true end
+  local trade = getTradeHead()
+  if not trade or not f.guid or not (C_TooltipInfo and C_TooltipInfo.GetBagItem) then return false end
+  local where = ns.Verdicts and ns.Verdicts.LocateInBags and ns.Verdicts.LocateInBags()[f.guid]
+  if not where then return false end
+  local ok, data = pcall(C_TooltipInfo.GetBagItem, where.bag, where.slot)
+  if not ok or type(data) ~= "table" or type(data.lines) ~= "table" then return false end
+  for _, line in ipairs(data.lines) do
+    local text = line.leftText
+    if text and text:sub(1, #trade) == trade then
+      f.tradeable = true
+      return true
+    end
+  end
+  return false
+end
+
 function Facts.ReadTooltip(f, data)
   if type(data) ~= "table" or type(data.lines) ~= "table" then return end
   local pattern = getUpgradePattern()

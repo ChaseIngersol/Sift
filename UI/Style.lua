@@ -28,6 +28,10 @@ Style.VERDICT_RGB = {
   DISPOSE = { 0.604, 0.604, 0.710 },
 }
 
+-- A groupmate's drop, on the toast and the panel: not one of the
+-- verdict colors, so "Marcus got" never reads as a verdict.
+Style.THEIRS_RGB = { 0.780, 0.640, 0.940 }
+
 -- The gain at the head of a row: how the comparison went, not which
 -- group the row sits in. Green better, red worse, grey too close to
 -- call or only an item level.
