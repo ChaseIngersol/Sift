@@ -261,20 +261,26 @@ local function layout()
     end
     r:Show()
   end
-  local height = PAD * 2 + n * ROW_H + math.max(0, n - 1) * GAP
+  -- A strip along the pinned edge's opposite side: the page count in
+  -- the middle when there is more than one page, Dismiss at the right
+  -- to clear the whole stack. Not while Edit Mode shows samples.
+  local height = PAD * 2 + n * ROW_H + math.max(0, n - 1) * GAP + FOOT_H
+  frame.footer:ClearAllPoints()
+  frame.dismiss:ClearAllPoints()
+  if up then
+    frame.footer:SetPoint("TOP", frame, "TOP", 0, -3)
+    frame.dismiss:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -2, 0)
+  else
+    frame.footer:SetPoint("BOTTOM", frame, "BOTTOM", 0, 3)
+    frame.dismiss:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -2, 0)
+  end
   if #entries > shown then
     frame.footer:SetText(string.format("%d-%d of %d", first, last, #entries))
-    frame.footer:ClearAllPoints()
-    if up then
-      frame.footer:SetPoint("TOP", frame, "TOP", 0, -3)
-    else
-      frame.footer:SetPoint("BOTTOM", frame, "BOTTOM", 0, 3)
-    end
     frame.footer:Show()
-    height = height + FOOT_H
   else
     frame.footer:Hide()
   end
+  frame.dismiss:SetShown(not editing)
   frame:SetHeight(height)
   updateThumb(up, n, last)
 end
@@ -358,6 +364,11 @@ local function build()
   frame.footer = frame:CreateFontString(nil, "OVERLAY")
   Style.Text(frame.footer, Style.SIZE.meta, Style.MUTED, "CENTER")
   frame.footer:Hide()
+
+  -- Done looking: one click clears the stack.
+  frame.dismiss = Style.TextButton(frame, "Dismiss", Style.SIZE.meta, function() Toast.Clear() end)
+  frame.dismiss:SetHeight(FOOT_H)
+  frame.dismiss:Hide()
 
   -- The panel's thin scroll thumb: an indicator in the right gutter.
   frame.thumb = frame:CreateTexture(nil, "OVERLAY")
