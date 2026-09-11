@@ -123,8 +123,8 @@ would be worth wearing then, it is a Hold that wakes when you level.
   evaluates your bags quietly, so pieces from before Sift are on it too,
   and it keeps up while open as you equip, loot and bank.
 - **Toast.** A small card per verdict, at the same safe moments as
-  chat. A click on a row clears that row, Dismiss under the stack
-  clears all of it, and a row left alone leaves on its own. Place it
+  chat. A click on a row clears that row, the X in the corner clears
+  all of it, and a row left alone leaves on its own. Place it
   in Edit Mode like any other HUD element, or switch it off in
   settings.
 - **Rolls.** A word beside every Need and Greed window: Need with the
