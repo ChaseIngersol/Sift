@@ -17,7 +17,7 @@
   their header to size it, and the game now hands that measurement
   back as a secret value inside a tooltip. The panes size themselves
   without measuring anything.
-- Dismiss under the toast clears the whole stack once you are done
+- An X in the toast's corner clears the whole stack once you are done
   looking. A click on a row still clears just that row.
 
 ## 1.0.4 - 2026-09-08

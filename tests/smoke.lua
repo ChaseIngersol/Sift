@@ -1808,14 +1808,14 @@ do local pt = _G.SiftLootAdvisorToast.__point; check(pt and pt[1] == "TOP" and p
 check(_G.SiftLootAdvisorToast.__strata == _G.SiftLootAdvisorPanel.__strata and (_G.SiftLootAdvisorToast.__level or 1) >= (_G.SiftLootAdvisorPanel.__level or 1) + 10,
   "the toast sits well above the panel in the same stratum")
 check(_G.SiftLootAdvisorToast.footer.__shown and _G.SiftLootAdvisorToast.footer.__text == "1-2 of 3", "footer counts the page: " .. tostring(_G.SiftLootAdvisorToast.footer.__text))
-do local d = _G.SiftLootAdvisorToast.dismiss; check(d.__shown and d.__point and d.__point[1] == "BOTTOMRIGHT", "Dismiss sits under a stack growing down") end
+do local d = _G.SiftLootAdvisorToast.dismiss; check(d.__shown and d.label.__text == "X" and d.__point and d.__point[1] == "BOTTOMRIGHT" and d.__point[4] == 0 and d.__point[5] == 0, "the X sits in the bottom corner of a stack growing down") end
 local thumb = _G.SiftLootAdvisorToast.thumb
 check(thumb.__shown and thumb.__height and thumb.__height < 92 and thumb.__point[5] == -6, "thumb shown at the top of the track, two thirds of it tall (" .. tostring(thumb.__height) .. ")")
 _G.SiftLootAdvisorToast.__scripts.OnMouseWheel(_G.SiftLootAdvisorToast, -1)
 check(ns.Toast.First() == 2 and _G.SiftLootAdvisorToast.footer.__text == "2-3 of 3", "wheel down scrolls to the later rows on a stack growing down")
 check(thumb.__point[5] < -6, "thumb moves down the track with the page (" .. tostring(thumb.__point[5]) .. ")")
 _G.SiftLootAdvisorToast.dismiss.__scripts.OnClick(_G.SiftLootAdvisorToast.dismiss)
-check(ns.Toast.Count() == 0 and not _G.SiftLootAdvisorToast.__shown, "Dismiss clears the stack and the toast goes")
+check(ns.Toast.Count() == 0 and not _G.SiftLootAdvisorToast.__shown, "the X clears the stack and the toast goes")
 ns.Toast.Show({ headline = "Equip", link = link(1001), line = "a", verdict = { kind = "EQUIP" } })
 ns.Toast.Show({ headline = "Hold", link = link(1003), line = "b", verdict = { kind = "HOLD" } })
 ns.Toast.Show({ headline = "Send", link = link(1006), line = "c", verdict = { kind = "SEND" } })
@@ -1919,7 +1919,7 @@ ns.db.prefs.toast = true
 EventRegistry:TriggerEvent("EditMode.Enter")
 check(_G.SiftLootAdvisorToast and _G.SiftLootAdvisorToast.__shown and ns.Toast.IsEditing() and ns.EditMode.IsActive(), "toast placeholder shown in Edit Mode")
 check(ns.Toast.Count() == ns.Toast.RowsShown(), "placeholder shows one full page of sample rows")
-check(not _G.SiftLootAdvisorToast.dismiss.__shown, "no Dismiss over the samples in Edit Mode")
+check(not _G.SiftLootAdvisorToast.dismiss.__shown, "no X over the samples in Edit Mode")
 local sys = ns.EditMode.Systems()[1]
 check(sys and sys.overlay and sys.overlay.__shown and sys.overlay.kit == "editmode-actionbar-highlight", "selection overlay up with Blizzard's highlight kit")
 sys.overlay.__scripts.OnEnter(sys.overlay)

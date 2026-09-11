@@ -30,7 +30,7 @@ local SURFACES = {
   { "Tooltip", "One line on every piece you could equip: the verdict and its reason. Hold Shift for the math, or hover a row in the panel." },
   { "Chat", "One line per new verdict, held until you are out of combat. Switch it off in settings if the panel is enough." },
   { "Panel", "/sift, the minimap button, or the addon compartment. Everything waiting on you, grouped by what to do next." },
-  { "Toast", "A small card per verdict, at the same safe moments as chat. A click clears a row, Dismiss clears the stack. Place it in Edit Mode; switch it off in settings if the panel is enough." },
+  { "Toast", "A small card per verdict, at the same safe moments as chat. A click clears a row, the X in the corner clears the stack. Place it in Edit Mode; switch it off in settings if the panel is enough." },
   { "Rolls, vault, bank", "A word beside Need and Greed, a ranking under the Great Vault, and reminders when you open a bank." },
 }
 

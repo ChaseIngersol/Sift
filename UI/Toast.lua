@@ -262,17 +262,17 @@ local function layout()
     r:Show()
   end
   -- A strip along the pinned edge's opposite side: the page count in
-  -- the middle when there is more than one page, Dismiss at the right
-  -- to clear the whole stack. Not while Edit Mode shows samples.
+  -- the middle when there is more than one page, and an X in the
+  -- corner to clear the whole stack. Not while Edit Mode shows samples.
   local height = PAD * 2 + n * ROW_H + math.max(0, n - 1) * GAP + FOOT_H
   frame.footer:ClearAllPoints()
   frame.dismiss:ClearAllPoints()
   if up then
     frame.footer:SetPoint("TOP", frame, "TOP", 0, -3)
-    frame.dismiss:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -2, 0)
+    frame.dismiss:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
   else
     frame.footer:SetPoint("BOTTOM", frame, "BOTTOM", 0, 3)
-    frame.dismiss:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -2, 0)
+    frame.dismiss:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
   end
   if #entries > shown then
     frame.footer:SetText(string.format("%d-%d of %d", first, last, #entries))
@@ -365,9 +365,9 @@ local function build()
   Style.Text(frame.footer, Style.SIZE.meta, Style.MUTED, "CENTER")
   frame.footer:Hide()
 
-  -- Done looking: one click clears the stack.
-  frame.dismiss = Style.TextButton(frame, "Dismiss", Style.SIZE.meta, function() Toast.Clear() end)
-  frame.dismiss:SetHeight(FOOT_H)
+  -- Done looking: an X in the corner clears the stack.
+  frame.dismiss = Style.TextButton(frame, "X", Style.SIZE.meta, function() Toast.Clear() end)
+  frame.dismiss:SetSize(FOOT_H, FOOT_H)
   frame.dismiss:Hide()
 
   -- The panel's thin scroll thumb: an indicator in the right gutter.
