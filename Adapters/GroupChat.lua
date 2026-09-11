@@ -1,8 +1,12 @@
 -- Telling the group. One click on a toast row, a panel row or the roll
 -- strip posts one line to party, raid or instance chat: what a drop is
--- worth to you, or who in the group could wear what is not. The game
--- allows group chat from addon code only on a hardware event, which is
--- the rule here anyway: nothing is ever posted without a click.
+-- worth to you, or who in the group could wear what is not. Nothing is
+-- ever posted without a click. That is a choice, not a limit: since
+-- 8.2.5 the game requires a hardware event only for Say, Yell and the
+-- public channels outside instances, and addons post to party and raid
+-- on their own all the time. Every line here asks for someone's loot
+-- or offers yours, and that should come from a person deciding to
+-- send it.
 --
 -- LIVE is the master switch. While it is false every post is a dry run
 -- that prints "would post to PARTY: ..." in your own chat frame and goes
